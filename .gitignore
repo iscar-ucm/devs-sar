@@ -1,0 +1,15 @@
+# Folders #
+######################
+build
+dist
+nbproject
+/data/csv/spec1
+/data/csv/spec2
+
+# Logs #
+######################
+*.log
+
+# OS generated files #
+######################
+.DS_Store

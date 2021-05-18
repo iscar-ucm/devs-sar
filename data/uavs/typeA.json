@@ -1,0 +1,14 @@
+{
+    "VMAX": 87.4480,
+    "VMIN": 20.0,
+    "GAMMAMAX": 30.0,
+    "PHIMAX": 45.0,
+    "SRMAX": 2.0,
+    "HMAX": 70000.0,
+    "TAUVA": 3.0,
+    "TAUH": 2.0,
+    "TAUROLL": 2.0,      
+    "RANGEMAX": 10000.0,
+    "TMAX": 800.0,
+    "SAFTEYDIST": 300.0
+}   
