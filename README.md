@@ -25,8 +25,10 @@ Scenarios to be executed should be in data/scenarios/Evaluator/ScenarioName.
 Results are saved in data/csv/spec1/Evaluator/ScenarioName.
 
 JDK dependency
+
 JDK 8 and onwards.
 
 Libraries dependencies
+
 xdevs-1.20190715, opencsv-5.0, json-simple-1.1.1, ejml-ddense-0.38, ejml-core-0.38,
 commons-logging-1.2, commons-lang3-3.11, commons-collections4-4.4, commons-beanutils-1.9.4.
