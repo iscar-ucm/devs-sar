@@ -7,6 +7,7 @@ package xdevs.spec2.evaluator;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import utils.CSVHandler;
 import xdevs.core.modeling.Coupled;
 import xdevs.spec2.flightSimulator.FlightSimulator;
 
@@ -16,7 +17,7 @@ import xdevs.spec2.flightSimulator.FlightSimulator;
  */
 public class EvTool2 extends Coupled {
 
-    public EvTool2(JSONObject jsonRoot) {
+    public EvTool2(JSONObject jsonRoot, CSVHandler csvHandler) {
         super("SimulatorTest");
 
         JSONArray targetsArray = (JSONArray) jsonRoot.get("targets");
@@ -24,7 +25,7 @@ public class EvTool2 extends Coupled {
         JSONArray uavsArray = (JSONArray) jsonRoot.get("uavs");
 
         // Test EvInputs model creation        
-        EvInputs ti = new EvInputs(jsonRoot);
+        EvInputs ti = new EvInputs(jsonRoot, csvHandler);
         super.addComponent(ti);
 
         // EV model creation

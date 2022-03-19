@@ -260,13 +260,13 @@ public class DinamicModel extends MotionModel {
             double newProb = CommonOps_DDRM.elementSum(newBelief);
             targetState = new TargetState(
                     newBelief,
-                    prevProb - newProb,
-                    true,
-                    getPredictionTime());
+                    getPredictionTime(),
+                    prevProb - newProb);
         } else {
             targetState = new TargetState(
                     newBelief,
-                    getPredictionTime());
+                    getPredictionTime(),
+                    0.0);
         }
 
         return targetState;

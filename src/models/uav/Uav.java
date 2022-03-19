@@ -21,19 +21,19 @@ import models.sensor.Sensor;
  *
  * @author jbbordon
  */
-public class Uav implements Cloneable {
+public class Uav {
 
     private String name;
     private String type;
     private UavCntrlType controlType;
     private double controlAt;
     private MotionModel motionModel;
-    private double startTime;
     private double endTime;
     private double seqEndTime;
     private double endFuel;
     private ArrayList<Sensor> sensors;
     private ArrayList<UavState> path;
+    private ArrayList<UavCntrlSignals> prevCntrlSignals;
     private ArrayList<UavCntrlSignals> cntrlSignals;
     private int totalNFZs;
     private int totalCollisions;
@@ -52,7 +52,7 @@ public class Uav implements Cloneable {
         type = (String) uavJSON.get("type");
         // read control
         JSONObject controlJS = (JSONObject) uavJSON.get("control");
-        controlType = UavCntrlType.valueOf((String)  controlJS.get("controlType"));
+        controlType = UavCntrlType.valueOf((String) controlJS.get("controlType"));
         controlAt = (double) controlJS.get("controlAt");
         // read motion model
         JSONObject motionModelJS = (JSONObject) uavJSON.get("motionModel");
@@ -86,7 +86,6 @@ public class Uav implements Cloneable {
                 searchArea.getAreaBearing()
         );
         initState.setXyPos(uavInitXYPos);
-        startTime = initState.getTime();
         // add initState as the first state in the uav path
         path = new ArrayList<>();
         path.add(initState);
@@ -104,8 +103,9 @@ public class Uav implements Cloneable {
             sensorJS = (JSONObject) sensorArray.get(index);
             sensors.add(new Sensor(sensorJS, searchArea));
         }
-        // init the cntrlSignals array
+        // init the cntrlSignals arrays
         cntrlSignals = new ArrayList<>();
+        prevCntrlSignals = new ArrayList<>();
         // init other data
         totalNFZs = 0;
         totalCollisions = 0;
@@ -114,50 +114,97 @@ public class Uav implements Cloneable {
     }
 
     /**
-     * Constructor. Copies the input Uav but with path and cntrlSignals empty.
+     * Constructor. Used to copy a UAV.
      *
-     * @param uav object to create a copy
      */
-    public Uav(Uav uav) {
-        // copy the given uav
-        name = uav.getName();
-        type = uav.getType();
-        controlType = uav.getControlType();
-        controlAt = uav.getControlAt();
-        MotionModelType uavMMType
-                = uav.getMotionModel().getType();
-        // copy the motion model
-        switch (uavMMType) {
+    public Uav(String name, String type, UavCntrlType controlType, double controlAt,
+            MotionModel motionModel, UavState initState, double endTime,
+            double seqEndTime, double endFuel, ArrayList<Sensor> sensors, 
+            ArrayList<UavCntrlSignals> prevCntrlSignals, int totalNFZs, int totalCollisions,
+            int totalFuelEmpties, double smoothValue) {
+        this.name = name;
+        this.type = type;
+        this.controlType = controlType;
+        this.controlAt = controlAt;
+        switch (motionModel.getType()) {
             case rungekutta:
-                motionModel = new RungeKutta((RungeKutta) uav.getMotionModel());
+                this.motionModel = new RungeKutta((RungeKutta) motionModel);
                 break;
             case jsbsim:
-                motionModel = new Jsbsim((Jsbsim) uav.getMotionModel());
+                this.motionModel = new Jsbsim((Jsbsim) motionModel);
                 break;
         }
-        // copy UAV initial State
-        UavState initState = new UavState(uav.getInitState());
-        startTime = uav.getStartTime();
-        // add initState as the first state in the uav path
-        path = new ArrayList<>();
-        path.add(initState);
-        // copy UAV final State        
-        endFuel = uav.getEndFuel();
-        endTime = uav.getEndTime();
-        seqEndTime = uav.getSeqEndTime();
+        // init path
+        this.path = new ArrayList<>();
+        this.path.add(initState.clone());
+        this.endFuel = endFuel;
+        this.endTime = endTime;
+        this.seqEndTime = seqEndTime;
         // copy UAV sensors
-        short index;
-        sensors = new ArrayList<>();
-        for (index = 0; index < uav.getSensors().size(); index++) {
-            sensors.add(new Sensor(uav.getSensors().get(index)));
+        this.sensors = new ArrayList<>();
+        for (short i = 0; i < sensors.size(); i++) {
+            this.sensors.add(sensors.get(i).copy());
         }
-        // init the cntrlSignals array
-        cntrlSignals = new ArrayList<>();
-        // init other data
-        totalNFZs = 0;
-        totalCollisions = 0;
-        totalFuelEmpties = 0;
-        smoothValue = 0.0;        
+        // init cntrlSignals
+        this.cntrlSignals = new ArrayList<>();
+        // clone prevCntrl
+        this.prevCntrlSignals = new ArrayList<>();
+        for (short i = 0; i < prevCntrlSignals.size(); i++) {
+            this.prevCntrlSignals.add(prevCntrlSignals.get(i).clone());
+        }        
+        this.totalNFZs = totalNFZs;
+        this.totalCollisions = totalCollisions;
+        this.totalFuelEmpties = totalFuelEmpties;
+        this.smoothValue = smoothValue;
+    }
+
+    /**
+     * Constructor. Used to clone a UAV.
+     *
+     */
+    public Uav(String name, String type, UavCntrlType controlType, double controlAt,
+            MotionModel motionModel, ArrayList<UavState> path, double endTime,
+            double seqEndTime, double endFuel, ArrayList<Sensor> sensors,
+            ArrayList<UavCntrlSignals> prevCntrlSignals, ArrayList<UavCntrlSignals> cntrlSignals,
+            int totalNFZs, int totalCollisions, int totalFuelEmpties, double smoothValue) {
+        this.name = name;
+        this.type = type;
+        this.controlType = controlType;
+        this.controlAt = controlAt;
+        switch (motionModel.getType()) {
+            case rungekutta:
+                this.motionModel = new RungeKutta((RungeKutta) motionModel);
+                break;
+            case jsbsim:
+                this.motionModel = new Jsbsim((Jsbsim) motionModel);
+                break;
+        }
+        // clone UAV path
+        this.path = new ArrayList<>();
+        for (short i = 0; i < path.size(); i++) {
+            this.path.add(path.get(i).clone());
+        }
+        this.endFuel = endFuel;
+        this.endTime = endTime;
+        this.seqEndTime = seqEndTime;
+        // clone UAV sensors
+        this.sensors = new ArrayList<>();
+        for (short i = 0; i < sensors.size(); i++) {
+            this.sensors.add(sensors.get(i).clone());
+        }
+        // clone UAV cntrlSignals arrays   
+        this.cntrlSignals = new ArrayList<>();
+        for (short i = 0; i < cntrlSignals.size(); i++) {
+            this.cntrlSignals.add(cntrlSignals.get(i).clone());
+        }
+        this.prevCntrlSignals = new ArrayList<>();
+        for (short i = 0; i < prevCntrlSignals.size(); i++) {
+            this.prevCntrlSignals.add(prevCntrlSignals.get(i).clone());
+        }        
+        this.totalNFZs = totalNFZs;
+        this.totalCollisions = totalCollisions;
+        this.totalFuelEmpties = totalFuelEmpties;
+        this.smoothValue = smoothValue;
     }
 
     /**
@@ -228,20 +275,6 @@ public class Uav implements Cloneable {
      */
     public void setMotionModel(MotionModel motionModel) {
         this.motionModel = motionModel;
-    }
-
-    /**
-     * @return the startTime
-     */
-    public double getStartTime() {
-        return startTime;
-    }
-
-    /**
-     * @param startTime the startTime to set
-     */
-    public void setStartTime(double startTime) {
-        this.startTime = startTime;
     }
 
     /**
@@ -343,6 +376,13 @@ public class Uav implements Cloneable {
     }
 
     /**
+     * @return the prevCntrlSignals
+     */
+    public ArrayList<UavCntrlSignals> getPrevCntrlSignals() {
+        return prevCntrlSignals;
+    }
+    
+    /**
      * @return the cntrlSignals
      */
     public ArrayList<UavCntrlSignals> getCntrlSignals() {
@@ -413,146 +453,54 @@ public class Uav implements Cloneable {
     }
 
     /**
-     * This method concatenates uavA path and cntrlSignals (not modified) with
-     * uavB path and cntrlSignals (modified).
+     * Returns a copy of the UAV with empty cntrlSignals and path set to the
+     * initial state.The same philosophy aplies to the UAV onboard sensors.
      *
-     * @param uavA not modified.
-     * @param uavB modified.
+     * @return Uav copy.
      */
-    public static void concatenateUavSequence(Uav uavA, Uav uavB) {
-
-        // get uav paths and cntrl lists
-        ArrayList<UavState> uavAPath
-                = uavA.getPath();
-        ArrayList<UavCntrlSignals> uavACntrlSignals
-                = uavA.getCntrlSignals();
-        ArrayList<UavState> uavBPath
-                = uavB.getPath();
-        ArrayList<UavCntrlSignals> uavBCntrlSignals
-                = uavB.getCntrlSignals();
-
-        // concatenate sequence path to the whole solution
-        uavAPath.remove(0);
-        uavBPath.addAll(uavAPath);
-
-        // concatenate sequence cntrlSignals to the whole solution
-        uavBCntrlSignals.addAll(uavACntrlSignals);
-
-        // store path and cntrlSignals in the final solution
-        uavB.setPath(uavBPath);
-        uavB.setCntrlSignals(uavBCntrlSignals);
-
-        // loop each sensor in the solution
-        for (int s = 0; s < uavA.getSensors().size(); ++s) {
-            Sensor.concatenateSensorSequence(
-                    uavA.getSensors().get(s),
-                    uavB.getSensors().get(s),
-                    uavBPath.get(uavBPath.size() - 1).getTime());
-        }
+    public Uav copy() {
+        return new Uav(
+                this.name,
+                this.type,
+                this.controlType,
+                this.controlAt,
+                this.motionModel,
+                this.getInitState(),
+                this.endTime,
+                this.seqEndTime,
+                this.endFuel,
+                this.getSensors(),
+                this.getPrevCntrlSignals(),
+                this.totalNFZs,
+                this.totalCollisions,
+                this.totalFuelEmpties,
+                this.smoothValue);
     }
 
+    @Override
     /**
-     * This method copies the input UavArrayList and returns another list as a
-     * copy. Control signals are left empty.
+     * Returns an exact clone of the object.The same philosophy aplies to the
+     * UAV onboard sensors.
      *
-     * @param uavs
-     * @return a copy of uavs.
+     * @return Uav clone.
      */
-    public static ArrayList<Uav> copyUavsArray(ArrayList<Uav> uavs) {
-
-        // the copy to return
-        ArrayList<Uav> uavsCopy = new ArrayList<>();
-
-        // for each uav in the array
-        for (int u = 0; u < uavs.size(); ++u) {
-            // copy the input uav
-            Uav newUav = new Uav(uavs.get(u));
-            uavsCopy.add(newUav);
-        }
-
-        return uavsCopy;
+    public Uav clone() {
+        return new Uav(
+                this.name,
+                this.type,
+                this.controlType,
+                this.controlAt,
+                this.motionModel,
+                this.getPath(),
+                this.endTime,
+                this.seqEndTime,
+                this.endFuel,
+                this.getSensors(),
+                this.getPrevCntrlSignals(),
+                this.getCntrlSignals(),
+                this.totalNFZs,
+                this.totalCollisions,
+                this.totalFuelEmpties,
+                this.smoothValue);
     }
-
-    /**
-     * This method return an array list with the uavs that have to be simulated
-     * for the given input sequence.
-     *
-     * @param uavs the secenario uavs.
-     * @param sequenceNum the actual sequence number.
-     * @param sequenceTime the sequence time.
-     *
-     * @return an ArrayList with the uavs.
-     */
-    public static ArrayList<Uav> uavsToSimulate(
-            ArrayList<Uav> uavs, int sequenceNum, double sequenceTime) {
-
-        // data to hold the scenario uavs that should be simulated in this sequence
-        ArrayList<Uav> simulationUavs = new ArrayList<>();
-
-        // sequence times
-        double endSequenceTime = sequenceNum * sequenceTime;
-
-        for (int u = 0; u < uavs.size(); ++u) {
-
-            // make a copy of the scenario uav
-            Uav newUav = new Uav(uavs.get(u));
-
-            // get scenario uav initTime and endTime
-            double uavStartTime = uavs.get(u).getFinalState().getTime()
-                    + uavs.get(u).getMotionModel().getAt();
-            double uavEndTime = uavs.get(u).getEndTime();
-
-            // check if uav has to be simulated in this sequence
-            if (uavStartTime < endSequenceTime && uavStartTime <= uavEndTime) {
-
-                // set newUav endTime
-                if (endSequenceTime > uavEndTime) {
-                    // adjust time to not exceed scenario uav endTime
-                    newUav.setSeqEndTime(uavEndTime);
-
-                } else {
-                    newUav.setSeqEndTime(endSequenceTime);
-
-                }
-
-                // initial state for newUav should be lastUavState simulated
-                UavState lastUavState = uavs.get(u).getFinalState();
-                newUav.setInitState(lastUavState);
-
-                // check sensors to be simulated
-                newUav.setSensors(Sensor.sensorsToSimulate(
-                        uavs.get(u).getSensors(), sequenceNum, sequenceTime));
-
-                // add the uav to simulationUavs list
-                simulationUavs.add(newUav);
-            }
-        }
-
-        return simulationUavs;
-    }
-
-    /**
-     * This method creates a new Uav population given the uavs to populate, the
-     * number of individuals and the sequence number and time,
-     *
-     * @param uavs
-     * @param numSol
-     * @param sequenceNum
-     * @param sequenceTime
-     * @return the uav population for the sequence number and time.
-     */
-    public static ArrayList<ArrayList<Uav>> populateNsUavs(
-            ArrayList<Uav> uavs, int numSol, int sequenceNum, double sequenceTime) {
-
-        // new population to return
-        ArrayList<ArrayList<Uav>> uavsPopulation = new ArrayList<>();
-
-        // loop numSol times to create the new population
-        for (int i = 0; i < numSol; ++i) {
-            uavsPopulation.add(copyUavsArray(uavsToSimulate(uavs, sequenceNum, sequenceTime)));
-        }
-
-        return uavsPopulation;
-    }
-
 }

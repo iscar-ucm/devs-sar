@@ -1,0 +1,242 @@
+{
+    "benchmark": "1UAV camera, 1target static (2 gaussians)",
+    "zone": {    
+        "latitude": 36.8687866974819,
+        "longitude": -2.7917287909395,
+        "xWidth": 20000.0,
+        "yHeight": 20000.0,
+        "areaBearing": 0.0,
+        "xCells": 20,
+        "yCells": 20
+    },
+    "nfzs": [
+        {
+            "xRow": 12,
+            "yCol": 0
+        },
+        {
+            "xRow": 12,
+            "yCol": 1
+        },
+        {
+            "xRow": 12,
+            "yCol": 2
+        },
+        {
+            "xRow": 13,
+            "yCol": 0
+        },
+        {
+            "xRow": 13,
+            "yCol": 1
+        },
+        {
+            "xRow": 13,
+            "yCol": 2
+        },
+        {
+            "xRow": 0,
+            "yCol": 5
+        },
+        {
+            "xRow": 0,
+            "yCol": 6
+        },
+        {
+            "xRow": 1,
+            "yCol": 5
+        },
+        {
+            "xRow": 1,
+            "yCol": 6
+        },
+        {
+            "xRow": 2,
+            "yCol": 5
+        },
+        {
+            "xRow": 2,
+            "yCol": 6
+        }
+    ],
+    "windMatrix": {
+        "xCells": 1,
+        "yCells": 1,
+        "xScale": 20000.0,
+        "yScale": 20000.0,
+        "winds": 
+                [
+                    [
+                        {
+                            "speed": 0.0,
+                            "angle": 0.0,
+                            "time": 0.0
+                        }
+                    ]
+                ]
+    },   
+    "targets": [
+        {
+            "name": "target1",
+            "motionModel": 
+                    {
+                        "type": "staticModel"
+                    },
+            "initState": {
+                "function": "gaussian",
+                "gaussians": [ 
+                    {
+                        "mu": [5, 10],
+                        "cov": [
+                            [1.0, 0.0],
+                            [0.0, 1.0]
+                        ],
+                        "weight": 0.5
+                    },
+                    {
+                        "mu": [17, 4],
+                        "cov": [
+                            [1.0, 0.0],
+                            [0.0, 1.0]
+                        ],
+                        "weight": 0.5
+                    }   
+                ],
+                "time": 0.0
+            },
+            "endTime": 500.0
+        }
+    ],
+    "uavs": [
+        {
+            "name": "uav_1", 
+            "type": "typeA",
+            "control": {
+                "controlType": "acyclic",
+                "controlAt": 10.0
+            },             
+            "motionModel": 
+                    {
+                        "type": "rungekutta",
+                        "at": 1.0,
+                        "decision": [
+                            {
+                                "name": "speed",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            },
+                            {
+                                "name": "heading",
+                                "type": "absolute",
+                                "min": -180.0,
+                                "max": 180.0
+                            },
+                            {
+                                "name": "elevation",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            }
+                        ]
+                    },
+            "initState": 
+                    {
+                        "lat": 36.8687866974819,
+                        "lng": -2.7917287909395,            
+                        "alt": 914.0,
+                        "heading": 0.0,
+                        "speed": 84.875999999999990,
+                        "fuel": 10000.0,
+                        "time": 0.0
+                    },
+            "finalState": 
+                    {
+                        "fuel": 200.0,
+                        "time": 500.0
+                    },
+            "sensors": 
+                    [
+                        {
+                            "name": "sensor1",
+                            "type": "cameraC",
+                            "control": {
+                                "controlType": "cyclic",
+                                "controlAt": 10.0
+                            },                         
+                            "payload": 
+                                    {
+                                        "type": "camera",
+                                        "captureAt": 1.0                       
+                                    },
+                            "motionModel": 
+                                    {
+                                        "type": "rungekutta",
+                                        "at": 1.0,
+                                        "decision": [
+                                            {
+                                                "name": "azimuth",
+                                                "type": "absolute",
+                                                "min": -90.0,
+                                                "max": 90.0
+                                            },
+                                            {
+                                                "name": "elevation",
+                                                "type": "absolute",
+                                                "min": 15.0,
+                                                "max": 90.0
+                                            }
+                                        ]
+                                    },
+                            "initState": 
+                                    {
+                                        "azimuth": 0.0,
+                                        "elevation": 45.0,
+                                        "time": 0.0          
+                                    },
+                            "endTime": 500.0                  
+                        }                
+                    ]
+        }
+    ],
+    "cntrlParams": {
+        "numOfRuns": 1,
+        "subsequence": 100.0,
+        "stopCriteria": {
+            "iterations": 100,
+            "time": 300.0,
+            "pd": 1.0
+        },
+        "exchangeIteration": 0,    
+        "logIterations": true,        
+        "constraints": ["nfz", "collision"],
+        "paretos": ["heurist", "etd", "pd"],
+        "sortingMethod": "CROWDING_DISTANCE"  
+    },
+    "algorithms": [
+        {
+            "type": "nsga2",
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],                         
+            "ns": 50
+        },
+        {
+            "type": "spea2",
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],                         
+            "ns": 50
+        }
+    ]
+}

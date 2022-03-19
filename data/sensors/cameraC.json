@@ -1,9 +1,9 @@
 {
     "pMax": 1.0,
-    "difX": 150.0,
-    "difY": 150.0,
-    "hFoV": 5.0,
-    "vFoV": 5.0, 
+    "difX": 250.0,
+    "difY": 250.0,
+    "hFoV": 7.5,
+    "vFoV": 7.5, 
     "aLimit": 5.0,
     "eLimit": 5.0,
     "aGain": 1.0,

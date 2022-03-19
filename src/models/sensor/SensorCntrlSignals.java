@@ -24,17 +24,7 @@ public class SensorCntrlSignals {
         this.cAzimuth = 0.0;
         this.cElevation = 0.0;
         this.time = 0.0;
-    }
-
-    /**
-     *
-     * @param cntrlSignals object to create a copy
-     */    
-    public SensorCntrlSignals(SensorCntrlSignals cntrlSignals) {
-        this.cAzimuth = cntrlSignals.getcAzimuth();
-        this.cElevation = cntrlSignals.getcElevation();
-        this.time = cntrlSignals.getTime();
-    }        
+    }  
     
     /**
      *
@@ -90,4 +80,11 @@ public class SensorCntrlSignals {
         this.time = time;
     }
 
+    @Override
+    public SensorCntrlSignals clone() {
+        return new SensorCntrlSignals(
+                this.cAzimuth,
+                this.cElevation,
+                this.time);
+    }       
 }

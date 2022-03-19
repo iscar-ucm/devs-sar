@@ -46,7 +46,7 @@ public class EvaluatorFunction extends Atomic {
     protected Nfz[] nfzs;
     protected ArrayList<Uav> uavs;
     protected ArrayList<Target> targets;
-    protected double clock, evaluatePeriod;
+    protected double clock;
     protected int targetsRcvd, uavsRcvd;
 
     public EvaluatorFunction(String coupledName, int numUavs, int numTargets) {
@@ -82,7 +82,6 @@ public class EvaluatorFunction extends Atomic {
         uavs = new ArrayList<>();
         targets = new ArrayList<>();
         clock = 0.0;
-        evaluatePeriod = 0.0;
         uavsRcvd = 0;
         targetsRcvd = 0;
         super.passivate();
@@ -95,7 +94,6 @@ public class EvaluatorFunction extends Atomic {
         uavs = new ArrayList<>();
         targets = new ArrayList<>();
         clock = 0.0;
-        evaluatePeriod = 0.0;
         uavsRcvd = 0;
         targetsRcvd = 0;
         super.passivate();
@@ -401,7 +399,6 @@ public class EvaluatorFunction extends Atomic {
     private void evaluateTgts() {
         // loop each target
         for (int t = 0; t < targets.size(); ++t) {
-            targets.get(t).calculateTargetDp();
             targets.get(t).calculateTargetHeuristic(uavs);
         }
     }

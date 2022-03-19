@@ -40,19 +40,20 @@ public class EvInputs extends Atomic {
     public ArrayList<Port> tiO5 = new ArrayList<>(); // iTarget to simulate
 
     // internal data
-    protected SearchArea searchArea;
-    protected Nfz[] nfzs;
-    protected WindMatrix windMatrix;
-    protected ArrayList<Uav> scenarioUavs;
-    protected ArrayList<Target> scenarioTargets;
-    protected int eUavsRcvd, eTgtsRcvd;
+    private SearchArea searchArea;
+    private Nfz[] nfzs;
+    private WindMatrix windMatrix;
+    private ArrayList<Uav> scenarioUavs;
+    private ArrayList<Target> scenarioTargets;
+    private int eUavsRcvd, eTgtsRcvd;
+    private CSVHandler csvHandler;
 
-    public EvInputs(JSONObject jsonRoot) {
-        super("Inputs");
+    public EvInputs(JSONObject jsonRoot, CSVHandler csvHandler) {
+        super("Inputs"); 
         super.addOutPort(tiO1);
         super.addOutPort(tiO2);
-        super.addOutPort(tiO3);
-
+        super.addOutPort(tiO3);    
+        
         JSONObject searchAreaJS = (JSONObject) jsonRoot.get("zone");
         searchArea = new SearchArea(searchAreaJS);
 
@@ -88,7 +89,7 @@ public class EvInputs extends Atomic {
 
             // read iUav cntrl actions             
             scenarioUavs.get(i).setCntrlSignals(
-                    CSVHandler.loadUavCntrl((String) iUavJS.get("name")));
+                    csvHandler.loadUavCntrl((String) iUavJS.get("name")));
 
             // read iUav sensors actions
             JSONArray sensorArray = (JSONArray) iUavJS.get("sensors");
@@ -102,7 +103,9 @@ public class EvInputs extends Atomic {
                 if (sensorMMType != MotionModelType.staticModel) {
                     // read actions
                     scenarioUavs.get(i).getSensors().get(k).setCntrlSignals(
-                            CSVHandler.loadSensorCntrl((String) kSensor.get("name")));
+                            csvHandler.loadSensorCntrl(
+                                    (String) iUavJS.get("name"),
+                                    (String) kSensor.get("name")));
                 }
             }
         }
@@ -125,6 +128,7 @@ public class EvInputs extends Atomic {
             // set full path
             scenarioTargets.get(i).setFullPath(true);
         }
+        this.csvHandler = csvHandler;
     }
 
     @Override
@@ -169,14 +173,14 @@ public class EvInputs extends Atomic {
                 if (!tiI1.get(i).isEmpty()) {
                     ++eUavsRcvd;
                     scenarioUavs.set(i, (Uav) tiI1.get(i).getSingleValue());
-                    CSVHandler.writeUav(scenarioUavs.get(i));
+                    csvHandler.writeUav(scenarioUavs.get(i));
                 }
             }
             for (int i = 0; i < tiI2.size(); ++i) {
                 if (!tiI2.get(i).isEmpty()) {
                     ++eTgtsRcvd;
                     scenarioTargets.set(i, (Target) tiI2.get(i).getSingleValue());
-                    CSVHandler.writeTarget(scenarioTargets.get(i));
+                    csvHandler.writeTarget(scenarioTargets.get(i));
                 }
             }
         }

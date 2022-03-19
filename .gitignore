@@ -3,7 +3,9 @@
 build
 dist
 nbproject
-/data/csv/spec1
+/data/csv/spec1/Evaluator
+/data/csv/spec1/FlightSimulator
+/data/csv/spec1/Optimizer
 /data/csv/spec2
 
 # Logs #

@@ -250,7 +250,7 @@
     },
     "algorithms": [
         {
-            "type": "gen",
+            "type": "ga",
             "crossover": 0.8,
             "mutation": [0.1, 0.01],
             "ns": 50

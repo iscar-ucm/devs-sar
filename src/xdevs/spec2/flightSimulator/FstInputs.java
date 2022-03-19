@@ -31,18 +31,18 @@ public class FstInputs extends Atomic {
     public Port<ArrayList<Uav>> tiO3 = new Port<>("uavs");
 
     // internal data
-    protected SearchArea searchArea;
-    protected WindMatrix windMatrix;
-    protected ArrayList<Uav> scenarioUavs;
-
-    public FstInputs(JSONObject jsonRoot) {
+    private SearchArea searchArea;
+    private WindMatrix windMatrix;
+    private ArrayList<Uav> scenarioUavs;
+    private CSVHandler csvHandler;
+    
+    public FstInputs(JSONObject jsonRoot, CSVHandler csvHandler) {
         super("TestInputs");
-
         super.addInPort(tiI1);
         super.addOutPort(tiO1);
         super.addOutPort(tiO2);
-        super.addOutPort(tiO3);
-
+        super.addOutPort(tiO3);      
+        
         JSONObject zoneJS = (JSONObject) jsonRoot.get("zone");
         searchArea = new SearchArea(zoneJS);
 
@@ -63,7 +63,7 @@ public class FstInputs extends Atomic {
 
             // read iUav cntrl actions             
             scenarioUavs.get(i).setCntrlSignals(
-                    CSVHandler.loadUavCntrl((String) iUavJS.get("name")));
+                    csvHandler.loadUavCntrl((String) iUavJS.get("name")));
 
             // read iUav sensors actions
             JSONArray sensorArray = (JSONArray) iUavJS.get("sensors");
@@ -77,10 +77,13 @@ public class FstInputs extends Atomic {
                 if (sensorMMType != MotionModelType.staticModel) {
                     // read actions
                     scenarioUavs.get(i).getSensors().get(k).setCntrlSignals(
-                            CSVHandler.loadSensorCntrl((String) kSensor.get("name")));
+                            csvHandler.loadSensorCntrl(
+                                    (String) iUavJS.get("name"),
+                                    (String) kSensor.get("name")));
                 }
             }
         }
+        this.csvHandler = csvHandler;
     }
 
     @Override
@@ -106,7 +109,7 @@ public class FstInputs extends Atomic {
             if (!tiI1.isEmpty()) {
                 scenarioUavs = tiI1.getSingleValue();
                 for (int i = 0; i < scenarioUavs.size(); ++i) {
-                    CSVHandler.writeUav(scenarioUavs.get(i));
+                    csvHandler.writeUav(scenarioUavs.get(i));
                 }
                 exit();
             }

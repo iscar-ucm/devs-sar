@@ -50,6 +50,7 @@ public class StaticTargetControl extends TargetControl {
                 scenarioTime = myTarget.getInitState().getTime();
                 prevTime = scenarioTime;
                 endTime = myTarget.getEndSequenceTime();
+                etd = myTarget.getEtd();
                 clock = endTime;
                 super.holdIn("evaluating", clock);
                 LOGGER.log(
@@ -58,7 +59,7 @@ public class StaticTargetControl extends TargetControl {
                                 "%1$s: TARGET EVALUATION START",
                                 this.getName()
                         )
-                );                
+                );
             }
 
         } else if (phaseIs("evaluating") || phaseIs("end")) {
@@ -79,9 +80,10 @@ public class StaticTargetControl extends TargetControl {
                 prevTime = scenarioTime;
 
                 // calculate etd
-                double etd = myTarget.getEtd();
                 etd += CommonOps_DDRM.elementSum(targetBelief) * elapsedTime;
-                myTarget.setEtd(etd);
+
+                // calculate dp
+                dp = 1.0 - CommonOps_DDRM.elementSum(targetBelief);
 
                 // check if current belief should be save it or not
                 if (myTarget.isFullPath()) {
@@ -89,7 +91,8 @@ public class StaticTargetControl extends TargetControl {
                     currentState
                             = new TargetState(
                                     targetBelief.copy(),
-                                    scenarioTime);
+                                    scenarioTime,
+                                    dp, etd);
                     myTarget.getPath().add(currentState);
                 }
             }
@@ -112,7 +115,8 @@ public class StaticTargetControl extends TargetControl {
                 currentState
                         = new TargetState(
                                 targetBelief.copy(),
-                                scenarioTime);
+                                scenarioTime,
+                                dp, etd);
                 myTarget.getPath().add(currentState);
             }
             // target time has ended so output evaluated target                    

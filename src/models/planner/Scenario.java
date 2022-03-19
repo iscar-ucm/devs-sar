@@ -13,6 +13,15 @@ import models.target.Target;
 import models.environment.SearchArea;
 import models.environment.Nfz;
 import models.environment.WindMatrix;
+import models.optimizer.CntrlParams;
+import models.optimizer.algorithm.ACOR;
+import models.optimizer.algorithm.Algorithm;
+import models.optimizer.algorithm.AlgorithmType;
+import models.optimizer.algorithm.MODE;
+import models.optimizer.algorithm.NSPSO;
+import models.optimizer.algorithm.NSGA2;
+import models.optimizer.algorithm.OMOPSO;
+import models.optimizer.algorithm.SPEA2;
 
 /**
  *
@@ -25,6 +34,8 @@ public class Scenario {
     private ArrayList<Target> targets;
     private Nfz[] nfzs;
     private WindMatrix windMatrix;
+    private ArrayList<Algorithm> algorithms;
+    private CntrlParams cntrlParams;
 
     /**
      *
@@ -48,6 +59,39 @@ public class Scenario {
         JSONObject windMatrixJS = (JSONObject) scenarioJSON.get("windMatrix");
         windMatrix = new WindMatrix(windMatrixJS);
         
+        // read the control paramaters common for all algorithms
+        JSONObject cntrlParamJS = (JSONObject) scenarioJSON.get("cntrlParams");
+        cntrlParams = new CntrlParams (cntrlParamJS);
+
+        // read optimization algorithms
+        JSONArray algoArray = (JSONArray) scenarioJSON.get("algorithms");
+        algorithms = new ArrayList<>();
+        for (int i = 0; i < algoArray.size(); ++i) {
+            // read ialgorithm
+            JSONObject iAlgorytmJS = (JSONObject) algoArray.get(i);
+            AlgorithmType algoType
+                    = AlgorithmType.valueOf((String) iAlgorytmJS.get("type"));
+            switch (algoType) {            
+                case nsga2:
+                    algorithms.add(new NSGA2(iAlgorytmJS, cntrlParams));
+                    break;
+                case spea2:
+                    algorithms.add(new SPEA2(iAlgorytmJS, cntrlParams));
+                    break;
+                case nspso:
+                    algorithms.add(new NSPSO(iAlgorytmJS, cntrlParams));
+                    break;
+                case omopso:
+                    algorithms.add(new OMOPSO(iAlgorytmJS, cntrlParams));
+                    break;
+                case mode:
+                    algorithms.add(new MODE(iAlgorytmJS, cntrlParams));
+                    break;                    
+                case acor:
+                    algorithms.add(new ACOR(iAlgorytmJS, cntrlParams));
+                    break;
+            }            
+        }
         
         // read scenario uavs
         JSONArray uavsArray = (JSONArray) scenarioJSON.get("uavs");        
@@ -136,6 +180,34 @@ public class Scenario {
      */
     public void setWindArray(WindMatrix windMatrix) {
         this.windMatrix = windMatrix;
+    }
+
+    /**
+     * @return the algorithms
+     */
+    public ArrayList<Algorithm> getalgorithms() {
+        return algorithms;
+    }
+
+    /**
+     * @param algorithms the algorithms to set
+     */
+    public void setalgorithms(ArrayList<Algorithm> algorithms) {
+        this.algorithms = algorithms;
+    }
+
+    /**
+     * @return the cntrlParams
+     */
+    public CntrlParams getParams() {
+        return cntrlParams;
+    }
+
+    /**
+     * @param cntrlParams the cntrlParams to set
+     */
+    public void setParams(CntrlParams cntrlParams) {
+        this.cntrlParams = cntrlParams;
     }
 
 }

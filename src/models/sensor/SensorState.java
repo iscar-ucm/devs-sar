@@ -26,18 +26,6 @@ public class SensorState {
     }
 
     /**
-     *
-     * @param state
-     */
-    public SensorState(SensorState state) {
-        this.azimuth = state.getAzimuth();
-        this.elevation = state.getElevation();
-        this.time = state.getTime();
-        this.cAzimuth = state.getcAzimuth();
-        this.cElevation = state.getcElevation();        
-    } 
-    
-    /**
      * @param azimuth
      * @param elevation
      * @param time
@@ -136,4 +124,13 @@ public class SensorState {
         this.cElevation = cElevation;
     }
 
+    @Override
+    public SensorState clone() {
+        return new SensorState(
+                this.azimuth,
+                this.elevation,
+                this.time,
+                this.cAzimuth,
+                this.cElevation);
+    }
 }

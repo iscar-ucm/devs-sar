@@ -1,0 +1,114 @@
+{
+    "proposito": "prueba básica, uav con sensor dinámico",    
+    "zone": {
+        "latitude": 36.8687866974819,
+        "longitude": -2.7917287909395,
+        "xWidth": 10000.0,
+        "yHeight": 10000.0,
+        "areaBearing": 0.0,
+        "xCells": 20,
+        "yCells": 20
+    },
+    "windMatrix": {
+        "xCells": 1,
+        "yCells": 1,
+        "xScale": 10000.0,
+        "yScale": 10000.0,
+        "winds": 
+                [
+                    [
+                        {
+                            "speed": 0.0,
+                            "angle": 0.0,
+                            "time": 0.0
+                        }
+                    ]
+                ]
+    },    
+    "uavs": [
+        {
+            "name": "uav_1", 
+            "type": "typeA",
+            "controlAt": 10.0,            
+            "motionModel": 
+                    {
+                        "type": "rungekutta",
+                        "at": 5.0,
+                        "decision": [
+                            {
+                                "name": "speed",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            },
+                            {
+                                "name": "heading",
+                                "type": "absolute",
+                                "min": -180.0,
+                                "max": 180.0
+                            },
+                            {
+                                "name": "elevation",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            }
+                        ]
+                    },
+            "initState": 
+                    {
+                        "lat": 36.8687866974819,
+                        "lng": -2.7917287909395,            
+                        "alt": 914.400000000000,
+                        "heading": 0.0,
+                        "speed": 20.0,
+                        "fuel": 10000.0,
+                        "time": 0.0
+                    },
+            "finalState": 
+                    {
+                        "fuel": 200.0,
+                        "time": 400.0
+                    },
+            "sensors": 
+                    [  
+                        {
+                            "name": "sensor_1",
+                            "type": "cameraA",
+                            "controlAt": 10.0,                    
+                            "payload": 
+                                    {
+                                        "type": "camera",
+                                        "captureAt": 5.0                       
+                                    },
+                            "motionModel": 
+                                    {
+                                        "type": "rungekutta",
+                                        "at": 2.0,
+                                        "decision": [
+                                            {
+                                                "name": "azimuth",
+                                                "type": "absolute",
+                                                "min": -45.0,
+                                                "max": 45.0
+                                            },
+                                            {
+                                                "name": "elevation",
+                                                "type": "absolute",
+                                                "min": 0.0,
+                                                "max": 90.0
+                                            }
+                                        ]
+                                    },
+                            "initState": 
+                                    {
+                                        "azimuth": 0.0,
+                                        "elevation": 45.0,
+                                        "time": 0.0          
+                                    },
+                            "endTime": 300.0                  
+                        }                                     
+                    ]
+        }      
+    ]
+}

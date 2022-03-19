@@ -31,13 +31,9 @@ public class Target {
     private int yCells;
     private double xScale;
     private double yScale;
-    private double startTime;    
+    private double startTime;
     private double endTime;
     private double endSequenceTime;
-    private double dp;        // detection probability
-    private double etd;       // expected time detection
-    private double heuristic; // myopia criteria    
-    private double missPD;  // total probability lost due to motion model predictions
     private boolean fullPath;
     private ArrayList<TargetState> path;
 
@@ -93,7 +89,7 @@ public class Target {
                                 (double) jsInitState.get("time"));
                 break;
         }
-        startTime = initState.getTime();     
+        startTime = (double) jsInitState.get("time");
         // init the path array
         fullPath = false;
         path = new ArrayList<>();
@@ -101,51 +97,76 @@ public class Target {
         // read target endTime            
         endTime = (double) targetJSON.get("endTime");
         endSequenceTime = endTime;
-        missPD = 0.0;
     }
 
-    public Target(Target tgt) {
-        // read target name       
-        name = tgt.getName();
-        // set target dimensions
-        xCells = tgt.xCells;
-        yCells = tgt.yCells;
-        xScale = tgt.xScale;
-        yScale = tgt.yScale;
+    /**
+     * Constructor. Used to copy a Target.
+     *
+     */    
+    public Target(String name, MotionModel motionModel, int xCells, int yCells,
+            double xScale, double yScale, double startTime, double endTime,
+            double endSequenceTime, TargetState initState) {      
+        this.name = name;
+        this.xCells = xCells;
+        this.yCells = yCells;
+        this.xScale = xScale;
+        this.yScale = yScale;
         // read motion model
         MotionModelType targetMMType
-                = tgt.getMotionModel().getType();
+                = motionModel.getType();
         switch (targetMMType) {
             case staticModel:
-                motionModel = new StaticModel((StaticModel) tgt.getMotionModel());
+                this.motionModel = new StaticModel((StaticModel) motionModel);
                 break;
             case homogeneous:
             case interpolation:
             case potential:
-                motionModel = new DinamicModel((DinamicModel) tgt.getMotionModel());
+                this.motionModel = new DinamicModel((DinamicModel) motionModel);
                 break;
         }
-        // read target initial State & init belief
-        DMatrixRMaj newBelief = new DMatrixRMaj(xCells, yCells);
-        newBelief = tgt.getInitState().getBelief().copy();
-        TargetState initState;
-        initState = new TargetState(
-                newBelief,
-                tgt.getInitState().getTime()
-        );
-        startTime = tgt.getStartTime();         
-        // init the path array
+        this.startTime = startTime;
         fullPath = false;
-        path = new ArrayList<>();
-        path.add(initState);
-        // read target endTime            
-        endTime = tgt.getEndTime();
-        endSequenceTime = tgt.getEndSequenceTime();
-        dp = tgt.getDp();
-        etd = tgt.getEtd();
-        heuristic = tgt.getHeuristic();
-        missPD = tgt.getMissPD();
+        this.path = new ArrayList<>();    
+        this.path.add(initState.clone());        
+        this.endTime = endTime;
+        this.endSequenceTime = endSequenceTime;
     }
+
+    /**
+     * Constructor. Used to clone a Target.
+     *
+     */    
+    public Target(String name, MotionModel motionModel, int xCells, int yCells,
+            double xScale, double yScale, double startTime, double endTime,
+            double endSequenceTime, boolean fullPath, ArrayList<TargetState> path) {      
+        this.name = name;
+        this.xCells = xCells;
+        this.yCells = yCells;
+        this.xScale = xScale;
+        this.yScale = yScale;
+        // read motion model
+        MotionModelType targetMMType
+                = motionModel.getType();
+        switch (targetMMType) {
+            case staticModel:
+                this.motionModel = new StaticModel((StaticModel) motionModel);
+                break;
+            case homogeneous:
+            case interpolation:
+            case potential:
+                this.motionModel = new DinamicModel((DinamicModel) motionModel);
+                break;
+        }
+        this.startTime = startTime;
+        this.fullPath = false;
+        // clone Target path        
+        this.path = new ArrayList<>();
+        for (short i = 0; i < path.size(); i++) {
+            this.path.add(path.get(i).clone());
+        }      
+        this.endTime = endTime;
+        this.endSequenceTime = endSequenceTime;
+    }    
 
     /**
      * @return the name
@@ -235,56 +256,28 @@ public class Target {
      * @return the dp
      */
     public double getDp() {
-        return dp;
-    }
-
-    /**
-     * @param dp the dp to set
-     */
-    public void setDp(double dp) {
-        this.dp = dp;
+        return getFinalState().getPd();
     }
 
     /**
      * @return the etd
      */
     public double getEtd() {
-        return etd;
-    }
-
-    /**
-     * @param etd the etd to set
-     */
-    public void setEtd(double etd) {
-        this.etd = etd;
+        return getFinalState().getEtd();
     }
 
     /**
      * @return the heuristic
      */
     public double getHeuristic() {
-        return heuristic;
+        return getFinalState().getHeuristic();
     }
-
-    /**
-     * @param heuristic the heuristic to set
-     */
-    public void setHeuristic(double heuristic) {
-        this.heuristic = heuristic;
-    }
-
+    
     /**
      * @return the missPD
      */
     public double getMissPD() {
-        return missPD;
-    }
-
-    /**
-     * @param missPD the missPD to set
-     */
-    public void setMissPD(double missPD) {
-        this.missPD = missPD;
+        return getFinalState().getMissPd();
     }
 
     /**
@@ -330,15 +323,6 @@ public class Target {
     }
 
     /**
-     * This method calculates the non detection probability for the last state
-     * of the path
-     *
-     */
-    public void calculateTargetDp() {
-        dp = 1.0 - CommonOps_DDRM.elementSum(getFinalState().getBelief()) - missPD;
-    }
-
-    /**
      * This method calculates the myopia heuristic given a uav solution.
      *
      * @param uavs the solution reached.
@@ -346,7 +330,7 @@ public class Target {
     public void calculateTargetHeuristic(ArrayList<Uav> uavs) {
 
         // retrive target last state belief
-        DMatrixRMaj lastBelief = getFinalState().getBelief();
+        DMatrixRMaj lastBelief = getFinalState().getBelief().copy();
 
         // variable to hold the heuristic map
         DMatrixRMaj tgtHeuristicMap = new DMatrixRMaj(xCells, yCells);
@@ -410,122 +394,47 @@ public class Target {
         }
         // finally compute target heuristic map with last target belief
         CommonOps_DDRM.elementMult(tgtHeuristicMap, lastBelief);
-        heuristic = CommonOps_DDRM.elementSum(tgtHeuristicMap);
+        getFinalState().setHeuristic(CommonOps_DDRM.elementSum(tgtHeuristicMap));
     }
 
     /**
-     * This method concatenates tgtA path (not modified) with tgtB path
-     * (modified).
+     * Returns a copy the target with empty path.
      *
-     * @param tgtA not modified.
-     * @param tgtB modified.
+     * @return Target copy.
      */
-    public static void concatenateTgtSequence(Target tgtA, Target tgtB) {
-
-        // get target paths 
-        ArrayList<TargetState> tgtAPath
-                = tgtA.getPath();
-        ArrayList<TargetState> tgtBPath
-                = tgtB.getPath();
-
-        // concatenate tgtA path to tgtB path
-        tgtAPath.remove(0);
-        tgtBPath.addAll(tgtAPath);
-
-        // store path in tgtB
-        tgtB.setPath(tgtBPath);
-
-        // copy dp, etd, heurist & missPD
-        tgtB.setDp(tgtA.getDp());
-        tgtB.setEtd(tgtA.getEtd());
-        tgtB.setHeuristic(tgtA.getHeuristic());
-        tgtB.setMissPD(tgtA.getMissPD());        
+    public Target copy() {
+        return new Target(
+                this.name,
+                this.motionModel,
+                this.xCells,
+                this.yCells,
+                this.xScale,
+                this.yScale,
+                this.startTime,
+                this.endTime,
+                this.endSequenceTime,
+                this.path.get(0));
     }
 
+    @Override
     /**
-     * This method copies the input ArrayListTarget and returns another list as
-     * a copy.
+     * Returns an exact clone of the object.
      *
-     * @param targets
-     * @return a copy of the targets.
+     * @return Target clone.
      */
-    public static ArrayList<Target> copyTargetsArray(ArrayList<Target> targets) {
-
-        // the copy to return
-        ArrayList<Target> targetsCopy = new ArrayList<>();
-
-        // for each target in the scenario
-        for (int t = 0; t < targets.size(); ++t) {
-            // copy the input target
-            Target newTarget = new Target(targets.get(t));
-            // add it target
-            targetsCopy.add(newTarget);
-        }
-
-        return targetsCopy;
-    }
-
-    /**
-     * This method creates a new Target population given the uavs to populate,
-     * the number of individuals and the sequence number and time,
-     *
-     * @param targets
-     * @param numSol
-     * @param sequenceNum
-     * @param sequenceTime
-     * @return the target population for the sequence number and time.
-     */
-    public static ArrayList<ArrayList<Target>> populateNsTargets(
-            ArrayList<Target> targets, int numSol, int sequenceNum, double sequenceTime) {
-
-        // new population to return
-        ArrayList<ArrayList<Target>> targetsPopulation = new ArrayList<>();
-
-        // data to hold the scenario uavs that should be simulated in this sequence
-        ArrayList<Target> tgtsToSimulate = new ArrayList<>();
-
-        // sequence times
-        double endSequenceTime = sequenceNum * sequenceTime;
-
-        // for each target in the scenario
-        for (int t = 0; t < targets.size(); ++t) {
-
-            // make a copy of the scenario target
-            Target newTarget = new Target(targets.get(t));
-
-            // get scenario target initTime and endTime
-            double tgtStartTime = targets.get(t).getFinalState().getTime();
-            double tgtEndTime = targets.get(t).getEndTime();
-
-            // check if target has to be simulated in this sequence
-            if (tgtStartTime < endSequenceTime) {
-
-                // set newTarget endTime
-                if (endSequenceTime > tgtEndTime) {
-                    // adjust time to not exceed scenario uav endTime
-                    newTarget.setEndSequenceTime(tgtEndTime);
-
-                } else {
-                    newTarget.setEndSequenceTime(endSequenceTime);
-
-                }
-
-                // initial state for newTarget should be lastTgtState simulated
-                TargetState lastTgtState = targets.get(t).getFinalState();
-                newTarget.setInitState(lastTgtState);
-
-                // add the target to tgtsToSimulate list
-                tgtsToSimulate.add(newTarget);
-
-            }
-        }
-
-        // finally loop numSol times to create the new population
-        for (int i = 0; i < numSol; ++i) {
-            targetsPopulation.add(copyTargetsArray(tgtsToSimulate));
-        }
-
-        return targetsPopulation;
+    public Target clone() {
+        return new Target(
+                this.name,
+                this.motionModel,
+                this.xCells,
+                this.yCells,
+                this.xScale,
+                this.yScale,
+                this.startTime,
+                this.endTime,
+                this.endSequenceTime,
+                this.fullPath,
+                this.path);
     }
 
     private DMatrixRMaj initSeveralGaussians(JSONArray gaussiansJS) {
@@ -552,7 +461,7 @@ public class Target {
 
         // normalize belief
         double sum = CommonOps_DDRM.elementSum(belief);
-        CommonOps_DDRM.divide(belief, sum);     
+        CommonOps_DDRM.divide(belief, sum);
 
         //DMatrixVisualization.show(belief, "Target Init State");        
         return belief;

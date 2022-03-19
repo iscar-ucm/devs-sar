@@ -28,17 +28,6 @@ public class UavCntrlSignals {
         this.cElevation = 0.0;
         this.time = 0.0;
     }
- 
-    /**
-     *
-     * @param cntrlSignals object to create a copy
-     */    
-    public UavCntrlSignals(UavCntrlSignals cntrlSignals) {
-        this.cSpeed = cntrlSignals.getcSpeed();
-        this.cHeading = cntrlSignals.getcHeading();
-        this.cElevation = cntrlSignals.getcElevation();
-        this.time = cntrlSignals.getTime();
-    }    
 
     /**
      * @param speed
@@ -109,4 +98,13 @@ public class UavCntrlSignals {
         this.time = time;
     }
 
+    @Override
+    public UavCntrlSignals clone() {
+        return new UavCntrlSignals(
+                this.cSpeed,
+                this.cHeading,
+                this.cElevation,
+                this.time);
+    }    
+    
 }

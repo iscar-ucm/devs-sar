@@ -53,29 +53,7 @@ public class UavState {
         cHeading = 0.0;
         cElevation = 0.0;
     }
-
-    /**
-     *
-     * @param state
-     */
-    public UavState(UavState state) {
-        // copey state
-        xyPos = new Cartesian(state.getX(), state.getY());
-        height = state.getHeight();
-        heading = state.getHeading();
-        airSpeed = state.getAirSpeed();
-        time = state.getTime();
-        fuel = state.getFuel();
-        xVa = state.getxVa();
-        xHeading = state.getxHeading();
-        xHeight = state.getxHeight();
-        xPIDi = state.getxPIDi();
-        xPIDd = state.getxPIDd();
-        cSpeed = state.getcSpeed();
-        cHeading = state.getcHeading();
-        cElevation = state.getcElevation();
-    }
-
+    
     /**
      *
      * @param x
@@ -138,7 +116,7 @@ public class UavState {
         this.xPIDd = xPIDd;
         this.cSpeed = cSpeed;
         this.cElevation = cElevation;
-        this.cHeading = cHeading;        
+        this.cHeading = cHeading;
     }
 
     /**
@@ -164,33 +142,7 @@ public class UavState {
         xPIDd = 0.0;
         cSpeed = airSpeed;
         cHeading = Math.PI * heading / 180.0;
-        cElevation = height;        
-    }
-
-    /**
-     *
-     * @param xyPos the uav cartesian pos
-     * @param height
-     * @param heading
-     * @param airSpeed
-     * @param time
-     * @param fuel
-     */
-    public UavState(Cartesian xyPos, double height, double heading, double airSpeed, double fuel, double time) {
-        this.xyPos = xyPos;
-        this.height = height;
-        this.heading = heading;
-        this.airSpeed = airSpeed;
-        this.time = time;
-        this.fuel = fuel;
-        xVa = 0.0;
-        xHeading = 0.0;
-        xHeight = 0.0;
-        xPIDi = 0.0;
-        xPIDd = 0.0;
-        cSpeed = airSpeed;
-        cHeading = Math.PI * heading / 180.0;
-        cElevation = height;        
+        cElevation = height;
     }
 
     /**
@@ -458,4 +410,25 @@ public class UavState {
     public void setcElevation(double cElevation) {
         this.cElevation = cElevation;
     }
+
+    @Override
+    public UavState clone() {
+        return new UavState(
+                this.xyPos.getX(),
+                this.xyPos.getY(),
+                this.height,
+                this.heading,
+                this.airSpeed,
+                this.fuel,                
+                this.time,
+                this.xVa,
+                this.xHeading,
+                this.xHeight,
+                this.xPIDi,
+                this.xPIDd,
+                this.cSpeed,
+                this.cElevation,
+                this.cHeading);
+    }
+
 }

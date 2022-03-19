@@ -1,0 +1,148 @@
+{
+    "proposito": "escenario estatico sin espacio sobrante: 30nmx30nm - Celda de 3000 m ",
+    "zone": {    
+        "latitude": 40.4430792,
+        "longitude": -3.7143281,
+        "xWidth": 60000.0,
+        "yHeight": 60000.0,
+        "areaBearing": 0.0,
+        "xCells": 20,
+        "yCells": 20
+    },
+    "nfzs": [
+    ],
+    "windMatrix": {
+        "xCells": 1,
+        "yCells": 1,
+        "xScale": 60000.0,
+        "yScale": 60000.0,
+        "winds": 
+                [
+                    [
+                        {
+                            "speed": 0.0,
+                            "angle": 0.0,
+                            "time": 0.0
+                        }
+                    ]
+                ]
+    },   
+    "targets": [
+        {
+            "name": "target1",
+            "motionModel": 
+                    {
+                        "type": "staticModel",
+                        "at": 375.0,
+                        "points": [
+                            {
+                                "xCell": 0,
+                                "yCell": 0,
+                                "actions": [0.0, 0.0875, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0]
+                            }                       
+                        ]
+                    },
+            "initState": {
+                "function": "load",
+                "time": 0.0
+            },
+            "endTime": 11000.0
+        }
+    ],
+    "uavs": [
+        {
+            "name": "uav_1", 
+            "type": "searcherMK3",
+            "controlAt": 10.0,            
+            "motionModel": 
+                    {
+                        "type": "rungekutta",
+                        "at": 1.0,
+                        "decision": [
+                            {
+                                "name": "speed",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            },
+                            {
+                                "name": "heading",
+                                "type": "absolute",
+                                "min": -180.0,
+                                "max": 180.0
+                            },
+                            {
+                                "name": "elevation",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            }
+                        ]
+                    },
+            "initState": 
+                    {
+                        "lat": 40.4430792,
+                        "lng": -3.7143281,            
+                        "alt": 914.0,
+                        "heading": 0.0,
+                        "speed": 40.0,
+                        "fuel": 100000.0,
+                        "time": 0.0
+                    },
+            "finalState": 
+                    {
+                        "fuel": 200.0,
+                        "time": 11000.0
+                    },
+            "sensors": 
+                    [
+                        {
+                            "name": "sensor1",
+                            "type": "radarPADS",
+                            "payload": 
+                                    {
+                                        "type": "radar",
+                                        "captureAt": 5.0                       
+                                    },
+                            "motionModel": 
+                                    {
+                                        "type": "staticModel"
+                                    },
+                            "initState": 
+                                    {                    
+                                        "time": 0.0          
+                                    },
+                            "endTime": 11000.0                  
+                        }                 
+                    ]
+        }
+    ],
+    "cntrlParams": {
+        "numOfRuns": 1,
+        "subsequence": 600.0,
+        "stopCriteria": {
+            "iterations": 100,
+            "time": 3600.0,
+            "pd": 1.0
+        },
+        "exchangeIteration": 0,        
+        "logIterations": false,
+        "constraints": ["nfz", "collision"],
+        "paretos": ["heurist", "etd", "pd"],
+        "sortingMethod": "CROWDING_DISTANCE"
+    },
+    "algorithms": [
+        {
+            "type": "nsga2",
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "ns": 50
+        }
+    ]
+}

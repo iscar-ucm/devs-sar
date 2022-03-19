@@ -6,6 +6,8 @@
 package models.sensor.payloads;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import models.environment.Cartesian;
 import utils.JSONLoader;
 import models.environment.SearchArea;
@@ -19,6 +21,8 @@ import static utils.CommonOperations.isEqual;
  * @author jbbordon
  */
 public class Camera extends Payload {
+
+    private static final Logger LOGGER = Logger.getLogger(Camera.class.getName());
 
     // sensor specific parameters
     private double pMax;
@@ -391,51 +395,70 @@ public class Camera extends Payload {
         int xPoints, yPoints;
         xPoints = (int) Math.ceil(xMax / difX);
         yPoints = (int) Math.ceil(yMax / difY);
-        cameraMatrix = new DMatrixRMaj(xPoints + 1, yPoints + 1);
 
-        // compute num of points x cell
-        numPointsxCell = (int) Math.ceil(sensorLikelihood.getxScale() / difX)
-                * (int) Math.ceil(sensorLikelihood.getyScale() / difY);
+        try {
 
-        // JALO: Para cambiar en un futuro y mejorar la estima de pMax
-        // ver detectionProb() de Matlab
-        double sensorElevation = (sensorState.getElevation() * Math.PI) / 180.0;
-        double sRange;
-        if (sensorElevation == 0) {
-            sRange = uavState.getHeight();
-        } else {
-            sRange = uavState.getHeight() / Math.sin(sensorElevation);
-        }
+            cameraMatrix = new DMatrixRMaj(xPoints + 1, yPoints + 1);
 
-        // loop each cell of the radarMatrix
-        for (int x = 0; x < cameraMatrix.getNumRows(); ++x) {
+            // compute num of points x cell
+            numPointsxCell = (int) Math.ceil(sensorLikelihood.getxScale() / difX)
+                    * (int) Math.ceil(sensorLikelihood.getyScale() / difY);
 
-            for (int y = 0; y < cameraMatrix.getNumCols(); ++y) {
-
-                // current point X,Y coordinates (uav is at the center of the matrix)
-                double pointX
-                        = cameraLoS.getX() - (cameraMatrix.getNumRows() / 2) * difX + x * difX;
-                double pointY
-                        = cameraLoS.getY() - (cameraMatrix.getNumCols() / 2) * difX + y * difY;
-
-                // Check the point is inside FoV
-                if (isInsideFoV(pointX, pointY) < 0) {
-                    cameraMatrix.set(x, y, 0.0);
-                } else {
-                    pMax = (5400.0 - 0.4 * sRange) / 5000.0;
-                    if (pMax > 1.0) {
-                        pMax = 1.0;
-                    }
-                    if (pMax < 0.0) {
-                        pMax = 0.0;
-                    }
-                    // Se hace según modelo que si distancia entre el target
-                    // y camara (LoS) es menor de 1000 es 1.0 y baja linealmente
-                    // según curva del PADS
-                    cameraMatrix.set(x, y, pMax);
-                }
-
+            // JALO: Para cambiar en un futuro y mejorar la estima de pMax
+            // ver detectionProb() de Matlab
+            double sensorElevation = (sensorState.getElevation() * Math.PI) / 180.0;
+            double sRange;
+            if (sensorElevation == 0) {
+                sRange = uavState.getHeight();
+            } else {
+                sRange = uavState.getHeight() / Math.sin(sensorElevation);
             }
+
+            // loop each cell of the radarMatrix
+            for (int x = 0; x < cameraMatrix.getNumRows(); ++x) {
+
+                for (int y = 0; y < cameraMatrix.getNumCols(); ++y) {
+
+                    // current point X,Y coordinates (uav is at the center of the matrix)
+                    double pointX
+                            = cameraLoS.getX() - (cameraMatrix.getNumRows() / 2) * difX + x * difX;
+                    double pointY
+                            = cameraLoS.getY() - (cameraMatrix.getNumCols() / 2) * difX + y * difY;
+
+                    // Check the point is inside FoV
+                    if (isInsideFoV(pointX, pointY) < 0) {
+                        cameraMatrix.set(x, y, 0.0);
+                    } else {
+                        pMax = (5400.0 - 0.4 * sRange) / 5000.0;
+                        if (pMax > 1.0) {
+                            pMax = 1.0;
+                        }
+                        if (pMax < 0.0) {
+                            pMax = 0.0;
+                        }
+                        // Se hace según modelo que si distancia entre el target
+                        // y camara (LoS) es menor de 1000 es 1.0 y baja linealmente
+                        // según curva del PADS
+                        cameraMatrix.set(x, y, pMax);
+                    }
+
+                }
+            }
+        } catch (OutOfMemoryError oome) {
+
+            LOGGER.log(Level.SEVERE,
+                    String.format("Out of memory due to camera elevation %1$s",
+                    sensorState.getElevation()        
+                    )
+            );
+
+        } catch (NegativeArraySizeException nase) {
+
+            LOGGER.log(Level.SEVERE,
+                    String.format("Camera matrix too big due to camera elevation %1$s",
+                    sensorState.getElevation()
+                    )
+            );
         }
     }
 }

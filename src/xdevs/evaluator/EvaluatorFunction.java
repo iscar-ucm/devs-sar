@@ -127,7 +127,7 @@ public class EvaluatorFunction extends Atomic {
                 // final evaluations
                 evaluateCollisions();
                 evaluateNFZs();
-               //evaluateSmoothness();
+                evaluateSmoothness();
                 evaluateFuelEmpties();
                 evaluateTgts();
 
@@ -364,7 +364,6 @@ public class EvaluatorFunction extends Atomic {
     private void evaluateTgts() {
         // loop each target
         for (int t = 0; t < targets.size(); ++t) {
-            targets.get(t).calculateTargetDp();
             targets.get(t).calculateTargetHeuristic(uavs);
         }
     }

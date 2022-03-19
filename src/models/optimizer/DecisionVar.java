@@ -12,13 +12,13 @@ import org.json.simple.JSONObject;
  * @author Juan
  */
 public class DecisionVar {
-    
+
     private DecisionVarName name;
     private DecisionVarType type;
     private double minValue;
     private double maxValue;
     private double range;
-    
+
     /**
      *
      * @param decisionJSON
@@ -28,8 +28,14 @@ public class DecisionVar {
         type = DecisionVarType.valueOf((String) decisionJSON.get("type"));
         minValue = (double) decisionJSON.get("min");
         maxValue = (double) decisionJSON.get("max");
-        range = Math.abs(minValue) + Math.abs(maxValue);
-    }    
+        if (minValue < 0 && maxValue < 0) {
+            range = minValue - maxValue;
+        } else if (minValue > 0 && maxValue > 0)  {
+            range = maxValue - minValue;
+        } else {
+            range = Math.abs(minValue) + Math.abs(maxValue);
+        }
+    }
 
     /**
      * @return the name
@@ -86,12 +92,12 @@ public class DecisionVar {
     public void setMaxValue(double maxValue) {
         this.maxValue = maxValue;
     }
-    
+
     /**
      * @return the range
      */
     public double getRange() {
         return range;
     }
-    
+
 }

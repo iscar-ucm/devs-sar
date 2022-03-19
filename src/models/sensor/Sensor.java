@@ -8,7 +8,6 @@ package models.sensor;
 import org.json.simple.JSONObject;
 import java.util.ArrayList;
 import models.environment.SearchArea;
-import models.sensor.motionModels.DinamicModel;
 import models.sensor.motionModels.MotionModel;
 import models.sensor.motionModels.MotionModelType;
 import models.sensor.motionModels.RungeKutta;
@@ -36,6 +35,7 @@ public class Sensor {
     private double endTime;
     private double seqEndTime;
     private ArrayList<SensorState> path;
+    private ArrayList<SensorCntrlSignals> prevCntrlSignals;
     private ArrayList<SensorCntrlSignals> cntrlSignals;
 
     /**
@@ -104,67 +104,112 @@ public class Sensor {
         // add initState as the first state in the sensor path
         path = new ArrayList<>();
         path.add(initState);
-        // init the cntrlSignals array        
+        // init the cntrlSignals arrays        
         cntrlSignals = new ArrayList<>();
+        prevCntrlSignals = new ArrayList<>();
     }
 
     /**
+     * Constructor. Used to copy a Sensor.
      *
-     * @param sensor makes a sensor copy but leaving the cntrlSignal arraylist
-     * and the path empty
      */
-    public Sensor(Sensor sensor) {
-        // copy sensor name, type & capture rate        
-        name = sensor.getName();
-        type = sensor.getType();
+    public Sensor(String name, String type, SensorCntrlType controlType, double controlAt,
+            Payload payload, MotionModel motionModel, double startTime, SensorState initialState,
+            double endTime, double seqEndTime, ArrayList<SensorCntrlSignals> prevCntrlSignals) {
+        this.name = name;
+        this.type = type;
         // init payload function
-        switch (sensor.getPayload().getPayloadType()) {
+        switch (payload.getPayloadType()) {
             case camera:
-                payload = new Camera((Camera) sensor.getPayload());
+                this.payload = new Camera((Camera) payload);
                 break;
             case ideal:
-                payload = new Ideal((Ideal) sensor.getPayload());
+                this.payload = new Ideal((Ideal) payload);
                 break;
             case footprint:
-                payload = new Footprint((Footprint) sensor.getPayload());
+                this.payload = new Footprint((Footprint) payload);
                 break;
             case radar:
-                payload = new Radar((Radar) sensor.getPayload());
+                this.payload = new Radar((Radar) payload);
                 break;
         }
-        // read motion model
-        MotionModelType sensorMMType
-                = sensor.getMotionModel().getType();
-        switch (sensorMMType) {
+        switch (motionModel.getType()) {
             case rungekutta:
-                motionModel = new RungeKutta((RungeKutta) sensor.getMotionModel());
+                this.motionModel = new RungeKutta((RungeKutta) motionModel);
                 break;
             case staticModel:
-                motionModel = new StaticModel((StaticModel) sensor.getMotionModel());
+                this.motionModel = new StaticModel((StaticModel) motionModel);
                 break;
         }
-        SensorState initState;
-        if (sensorMMType == MotionModelType.staticModel) {
-            // Static sensor
-            // copy sensor initial State
-            initState = new SensorState(
-                    sensor.getInitState().getTime());
-        } else { // ideal, footprint & radar
-            // Dynamic sensor
-            controlType = sensor.getControlType();
-            controlAt = sensor.getControlAt();
-            // copy sensor initial State
-            initState = new SensorState(sensor.getInitState());
+        this.controlType = controlType;
+        this.controlAt = controlAt;
+        this.startTime = startTime;
+        // init path
+        this.path = new ArrayList<>();
+        this.path.add(initialState.clone());
+        this.endTime = endTime;
+        this.seqEndTime = seqEndTime;
+        // init cntrlSignals    
+        this.cntrlSignals = new ArrayList<>();
+        // clone prevCntrl        
+        this.prevCntrlSignals = new ArrayList<>();
+        for (short i = 0; i < prevCntrlSignals.size(); i++) {
+            this.prevCntrlSignals.add(prevCntrlSignals.get(i).clone());
+        }         
+    }
+
+    /**
+     * Constructor. Used to clone a Sensor.
+     *
+     */
+    public Sensor(String name, String type, SensorCntrlType controlType, double controlAt,
+            Payload payload, MotionModel motionModel, double startTime, ArrayList<SensorState> path,
+            double endTime, double seqEndTime, ArrayList<SensorCntrlSignals> prevCntrlSignals,
+            ArrayList<SensorCntrlSignals> cntrlSignals) {
+        this.name = name;
+        this.type = type;
+        // init payload function
+        switch (payload.getPayloadType()) {
+            case camera:
+                this.payload = new Camera((Camera) payload);
+                break;
+            case ideal:
+                this.payload = new Ideal((Ideal) payload);
+                break;
+            case footprint:
+                this.payload = new Footprint((Footprint) payload);
+                break;
+            case radar:
+                this.payload = new Radar((Radar) payload);
+                break;
         }
-        startTime = sensor.getStartTime();
-        // copy sensor final State
-        endTime = sensor.getEndTime();
-        seqEndTime = sensor.getSeqEndTime();
-        // add initState as the first state in the sensor path
-        path = new ArrayList<>();
-        path.add(initState);
-        // init the cntrlSignals array        
-        cntrlSignals = new ArrayList<>();
+        switch (motionModel.getType()) {
+            case rungekutta:
+                this.motionModel = new RungeKutta((RungeKutta) motionModel);
+                break;
+            case staticModel:
+                this.motionModel = new StaticModel((StaticModel) motionModel);
+                break;
+        }
+        this.controlType = controlType;
+        this.controlAt = controlAt;
+        this.startTime = startTime;
+        // clone sensor path
+        this.path = new ArrayList<>();
+        for (short i = 0; i < path.size(); i++) {
+            this.path.add(path.get(i).clone());
+        }
+        this.endTime = endTime;
+        this.seqEndTime = seqEndTime;
+        // clone Sensor cntrlSignals arrays  
+        this.cntrlSignals = new ArrayList<>();
+        for (short i = 0; i < cntrlSignals.size(); i++) {
+            this.cntrlSignals.add(cntrlSignals.get(i).clone());
+        }
+        this.prevCntrlSignals = new ArrayList<>();
+        for (short i = 0; i < prevCntrlSignals.size(); i++) {
+            this.prevCntrlSignals.add(prevCntrlSignals.get(i).clone());
+        }        
     }
 
     /**
@@ -329,6 +374,13 @@ public class Sensor {
     }
 
     /**
+     * @return the prevCntrlSignals
+     */
+    public ArrayList<SensorCntrlSignals> getPrevCntrlSignals() {
+        return prevCntrlSignals;
+    }
+
+    /**
      * @param cntrlSignals the cntrlSignals to set
      */
     public void setCntrlSignals(ArrayList<SensorCntrlSignals> cntrlSignals) {
@@ -352,106 +404,43 @@ public class Sensor {
     }
 
     /**
-     * This method concatenates sensorA path and cntrlSignals (not modified)
-     * with sensorB path and cntrlSignals (modified).
+     * Returns a copy the Sensor with empty cntrlSignals and sensor path set to
+     * the initial state.
      *
-     * @param sensorA not modified.
-     * @param sensorB modified.
-     * @param uavTime last uavState time.
+     * @return Sensor copy.
      */
-    public static void concatenateSensorSequence(
-            Sensor sensorA, Sensor sensorB, double uavTime) {
-
-        // get sensor paths
-        ArrayList<SensorState> sensorAPath
-                = sensorA.getPath();
-        ArrayList<SensorState> sensorBPath
-                = sensorB.getPath();
-
-        if (!sensorA.isStatic()) {
-            // dinamic sensors
-            // get sensor cntrl lists
-            ArrayList<SensorCntrlSignals> sensorACntrlSignals
-                    = sensorA.getCntrlSignals();
-            ArrayList<SensorCntrlSignals> sensorBCntrlSignals
-                    = sensorB.getCntrlSignals();
-
-            // concatenate sequence path to the whole solution
-            sensorAPath.remove(0);
-            sensorBPath.addAll(sensorAPath);
-
-            // concatenate sequence cntrlSignals to the whole solution
-            sensorBCntrlSignals.addAll(sensorACntrlSignals);
-
-            // store path and cntrlSignals in the final solution
-            sensorB.setPath(sensorBPath);
-            sensorB.setCntrlSignals(sensorBCntrlSignals);
-
-        } else {
-            // static sensors
-            SensorState newState = new SensorState(uavTime);
-            sensorBPath.add(newState);
-            sensorB.setPath(sensorBPath);
-        }
+    public Sensor copy() {
+        return new Sensor(
+                this.name,
+                this.type,
+                this.controlType,
+                this.controlAt,
+                this.payload,
+                this.motionModel,
+                this.startTime,
+                this.getInitState(),
+                this.endTime,
+                this.seqEndTime,
+                this.getPrevCntrlSignals());
     }
 
+    @Override
     /**
-     * This method return an array list with the uav sensors that have to be
-     * simulated for the given input sequence.
-     *
-     * @param sensors the uav sensors.
-     * @param sequenceNum the actual sequence number.
-     * @param sequenceTime the sequence time.
-     *
-     * @return an ArrayList with the uav sensors
+     * Returns an exact copy of the object.
      */
-    public static ArrayList<Sensor> sensorsToSimulate(
-            ArrayList<Sensor> sensors, int sequenceNum, double sequenceTime) {
-
-        // data to hold the uav sensors that should be simulated in this sequence
-        ArrayList<Sensor> sensorsToSimulate = new ArrayList<>();
-
-        // sequence times
-        double endSequenceTime = sequenceNum * sequenceTime;
-
-        // for each sensor in the uav
-        for (int s = 0; s < sensors.size(); ++s) {
-
-            // copy the input sensor
-            Sensor newSensor = new Sensor(sensors.get(s));
-
-            // get scenario sensor initTime and endTime
-            double sensorStartTime = sensors.get(s).getFinalState().getTime();
-            double sensorEndTime = sensors.get(s).getEndTime();
-
-            if (!sensors.get(s).isStatic()) {
-                DinamicModel sensorMM = (DinamicModel) sensors.get(s).getMotionModel();
-                sensorStartTime += sensorMM.getAt();
-            }
-
-            // check if sensor has to be simulated in this sequence
-            if (sensorStartTime < endSequenceTime && sensorStartTime <= sensorEndTime) {
-
-                // set newSensor endTime
-                if (endSequenceTime > sensorEndTime) {
-                    // adjust time to not exceed scenario sensor endTime
-                    newSensor.setSeqEndTime(sensorEndTime);
-
-                } else {
-                    newSensor.setSeqEndTime(endSequenceTime);
-
-                }
-
-                // initial state for newSensor should be last simulated state
-                SensorState lastSesnsorState
-                        = sensors.get(s).getFinalState();
-                newSensor.setInitState(lastSesnsorState);
-
-                // add newSensor to sensorsToSimulate list
-                sensorsToSimulate.add(newSensor);
-            }
-        }
-        return sensorsToSimulate;
+    public Sensor clone() {
+        return new Sensor(
+                this.name,
+                this.type,
+                this.controlType,
+                this.controlAt,
+                this.payload,
+                this.motionModel,
+                this.startTime,
+                this.getPath(),
+                this.endTime,
+                this.seqEndTime,
+                this.getPrevCntrlSignals(),
+                this.getCntrlSignals());
     }
-
 }

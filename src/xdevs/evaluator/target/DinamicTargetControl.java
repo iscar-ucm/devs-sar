@@ -37,21 +37,10 @@ public class DinamicTargetControl extends TargetControl {
             super.holdIn("evaluating", clock);
 
         } else if (phaseIs("updateMotionModel")) {
-            // calculate elapsed time since last capture
-            double elapsedTime = scenarioTime - prevTime;
-            prevTime = scenarioTime;
-
-            // calculate etd
-            double etd = myTarget.getEtd();
-            etd += (CommonOps_DDRM.elementSum(targetBelief) + myTarget.getMissPD()) * elapsedTime;
-            myTarget.setEtd(etd);
-
             // check if current belief should be save it or not            
             if (myTarget.isFullPath()) {
                 myTarget.getPath().add(currentState);
-
             }
-
             // wait remaining time
             super.holdIn("evaluating", clock);
 
@@ -83,6 +72,8 @@ public class DinamicTargetControl extends TargetControl {
                 scenarioTime = myTarget.getInitState().getTime();
                 prevTime = scenarioTime;
                 endTime = myTarget.getEndSequenceTime();
+                missPd = myTarget.getMissPD();
+                etd = myTarget.getEtd();
                 super.holdIn("start", clock);
                 LOGGER.log(
                         Level.ALL,
@@ -93,27 +84,26 @@ public class DinamicTargetControl extends TargetControl {
                 );
             }
         } else if (phaseIs("evaluating") || phaseIs("end")) {
+            
             // check TMM port for a belief predictions
             if (!tcI3.isEmpty()) {
                 // new motion model belief prediction has arrived
                 currentState = tcI3.getSingleValue();
                 // update missing PD due to motion model predictions
-                myTarget.setMissPD(
-                        myTarget.getMissPD() + currentState.getcMissPd());
+                missPd += currentState.getMissPd();
                 targetBelief = currentState.getBelief().copy();
                 scenarioTime = currentState.getTime();
                 // calculate elapsed time since last capture
                 double elapsedTime = scenarioTime - prevTime;
                 prevTime = scenarioTime;
-                // calculate etd
-                double etd = myTarget.getEtd();
-                etd += (CommonOps_DDRM.elementSum(targetBelief) + myTarget.getMissPD()) * elapsedTime;
-                myTarget.setEtd(etd);
+                // update etd
+                etd += (CommonOps_DDRM.elementSum(targetBelief) + missPd) * elapsedTime;
                 // check if current belief should be save it or not            
                 if (myTarget.isFullPath()) {
                     myTarget.getPath().add(currentState);
                 }
             }
+            
             // check u UM in ports for new sensor Likelihood updates
             for (int u = 0; u < tcI2.size(); ++u) {
                 if (!tcI2.get(u).isEmpty()) {
@@ -126,7 +116,13 @@ public class DinamicTargetControl extends TargetControl {
                 scenarioTime = sensorLikelihoods.get(0).getTime();
                 // perform sensorFusion
                 sensorFusion();
-                currentState = new TargetState(targetBelief.copy(), scenarioTime);
+                // calculate elapsed time since last capture
+                double elapsedTime = scenarioTime - prevTime;
+                prevTime = scenarioTime;
+                // update etd & dp
+                etd += (CommonOps_DDRM.elementSum(targetBelief) + missPd) * elapsedTime;
+                dp = 1.0 - CommonOps_DDRM.elementSum(targetBelief);
+                currentState = new TargetState(targetBelief.copy(), scenarioTime, dp, etd);
                 super.holdIn("updateMotionModel", 0.0);
             }
         }
@@ -155,9 +151,18 @@ public class DinamicTargetControl extends TargetControl {
                 currentState
                         = new TargetState(
                                 targetBelief.copy(),
-                                scenarioTime);
+                                scenarioTime,
+                                dp, etd);
                 myTarget.getPath().add(currentState);
+            } else {
+                // make sure etd & dp are updated in the last state just in case
+                // this is a prediction state
+                if (currentState.isPrediction()) {
+                    currentState.setPd(dp);
+                    currentState.setEtd(etd);
+                }
             }
+                
             // target time has ended so output evaluated target                    
             tcO1.addValue(myTarget);
         }
