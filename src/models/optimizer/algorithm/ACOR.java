@@ -6,7 +6,6 @@
 package models.optimizer.algorithm;
 
 import java.util.ArrayList;
-import models.optimizer.CntrlParams;
 import models.optimizer.Problem;
 import models.optimizer.Solution;
 import models.target.Target;
@@ -22,14 +21,13 @@ public class ACOR extends Algorithm {
     /**
      *
      * @param algorithmJSON
-     * @param cntrlParams
      */
-    public ACOR(JSONObject algorithmJSON, CntrlParams cntrlParams) {
-        super(algorithmJSON, cntrlParams);
+    public ACOR(JSONObject algorithmJSON) {
+        super(algorithmJSON);
     }      
 
     @Override
-    public ArrayList<Solution> initialize(Problem myProblem) {
+    public ArrayList<Solution> initialize(ArrayList<Problem> problems) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }    
 
@@ -50,6 +48,16 @@ public class ACOR extends Algorithm {
 
     @Override
     public ArrayList<Solution> iterate() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public void tradeIn(ArrayList<Solution> solutions) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public ArrayList<Solution> tradeOut() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

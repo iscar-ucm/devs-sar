@@ -23,9 +23,11 @@ public class Optimizer extends Coupled {
 
     // in Ports of the model
     public Port<JSONObject> opI1 = new Port<>("scenario");
+    public ArrayList<Port> opI2 = new ArrayList<>(); // set of intermediate solutions from other algorithms 
 
-    // out Ports of the model 
-    public Port<ArrayList<Solution>> opO1 = new Port<>("finalSolutions"); //set of final solutions
+    // out Ports of the model
+    public Port<ArrayList<Solution>> opO1 = new Port<>("exSolutions"); // set of intermediate solutions to other algorithms     
+    public Port<ArrayList<Solution>> opO2 = new Port<>("finalSolutions"); //set of final solutions
 
     public Optimizer(JSONObject jsonRoot, int oIndex, CSVHandler csvHandler) {
         super("OP" + oIndex);
@@ -38,6 +40,7 @@ public class Optimizer extends Coupled {
         // EIC & EOC of the model
         super.addInPort(opI1);
         super.addOutPort(opO1);
+        super.addOutPort(opO2);
 
         // create OP model
         JSONObject algorithmJS = (JSONObject) algorithmsArray.get(oIndex - 1);
@@ -79,16 +82,33 @@ public class Optimizer extends Coupled {
             }
 
             // coupling of IC (FS & EV) & (AC & EV)
+            int numSensor = 0;
             for (int u = 0; u < uavsArray.size(); ++u) {
                 super.addCoupling(sEV.eO1.get(u), ac.acI2.get(s).get(u));
-                super.addCoupling(sFS.fsO1.get(u), sEV.eI4.get(u));
                 super.addCoupling(sFS.fsO2.get(u), sEV.eI5.get(u));
+                // coupling of each sensor likelihood
+                JSONObject uavJS = (JSONObject) uavsArray.get(u);
+                JSONArray sensorsArray = (JSONArray) uavJS.get("sensors");
+                for (int k = 0; k < sensorsArray.size(); ++k) {
+                    super.addCoupling(sFS.fsO1.get(numSensor), sEV.eI4.get(numSensor));
+                    numSensor++;
+                }
             }
         }
 
         // coupling of EIC & EOC
         super.addCoupling(opI1, ac.acI1);
         super.addCoupling(ac.acO6, opO1);
+        super.addCoupling(ac.acO7, opO2);
 
+        // for each algorithm 
+        for (int a = 0; a < algorithmsArray.size(); ++a) {
+            // create the EIC port
+            Port<ArrayList<Solution>> aPortI2 = new Port<>(a + "-inSolutions");
+            opI2.add(aPortI2);
+            super.addInPort(aPortI2);
+            // coupling of EIC ports.
+            super.addCoupling(opI2.get(a), ac.acI4.get(a));
+        }
     }
 }

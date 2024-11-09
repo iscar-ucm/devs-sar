@@ -139,8 +139,8 @@ public class SensorControl extends Atomic {
     public void deltcon() {
         deltext(0);
         deltint();
-    }    
-  
+    }
+
     @Override
     public void lambda() {
 

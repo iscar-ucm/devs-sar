@@ -224,6 +224,8 @@ public class RungeKutta extends MotionModel {
                 rkVector[3], // airSpeed
                 uavFuel,
                 uavState.getTime() + at,
+                0, // collisions
+                0, // nfzs
                 rkVector[4], // xVa
                 rkVector[6], // xHeading 
                 rkVector[8], // xHeight
@@ -378,7 +380,7 @@ public class RungeKutta extends MotionModel {
 
     @Override
     public void resetModel() {
-        uavState = new UavState();
+        uavState = null;
     }
 
 }

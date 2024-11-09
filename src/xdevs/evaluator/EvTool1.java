@@ -17,14 +17,14 @@ import xdevs.flightSimulator.FlightSimulator;
  */
 public class EvTool1 extends Coupled {
 
-    public EvTool1(JSONObject jsonRoot, CSVHandler csvHandler) {
+    public EvTool1(JSONObject jsonRoot, boolean fullPath, CSVHandler csvHandler) {
         super("SimulatorTest");
 
         JSONArray targetsArray = (JSONArray) jsonRoot.get("targets");
         JSONArray uavsArray = (JSONArray) jsonRoot.get("uavs");
 
         // Test EvInputs model creation        
-        EvInputs ti = new EvInputs(jsonRoot, csvHandler);
+        EvInputs ti = new EvInputs(jsonRoot, fullPath, csvHandler);
         super.addComponent(ti);
 
         // FS model creation

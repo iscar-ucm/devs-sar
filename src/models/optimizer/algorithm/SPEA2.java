@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Random;
-import models.optimizer.CntrlParams;
 import models.optimizer.Problem;
 import models.optimizer.Solution;
 import models.optimizer.comparator.ArrayDominance;
@@ -24,11 +23,9 @@ import models.optimizer.operator.selection.BinaryTournament;
 import models.optimizer.operator.selection.Selection;
 import models.optimizer.operator.selection.Tournament;
 import models.sensor.Sensor;
-import models.sensor.SensorCntrlSignals;
 import models.sensor.SensorCntrlType;
 import models.target.Target;
 import models.uav.Uav;
-import models.uav.UavCntrlSignals;
 import models.uav.UavCntrlType;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -57,14 +54,14 @@ public class SPEA2 extends Algorithm {
     // NSGAII auxilar data
     private int K;
     private Random rnd;
+    private HashSet<Integer> alreadyChosen;    
 
     /**
      *
      * @param algorithmJSON
-     * @param cntrlParams
      */
-    public SPEA2(JSONObject algorithmJSON, CntrlParams cntrlParams) {
-        super(algorithmJSON, cntrlParams);
+    public SPEA2(JSONObject algorithmJSON) {
+        super(algorithmJSON);
 
         // read Genetic configuration parameters
         JSONObject selectionJS = (JSONObject) algorithmJSON.get("selection");
@@ -92,7 +89,7 @@ public class SPEA2 extends Algorithm {
         for (int i = 0; i < mutationJS.size(); ++i) {
             mutationF[i] = (double) mutationJS.get(i);
         }
-        mutationOperator = new Mutation(mutationF, cntrlParams);
+        mutationOperator = new Mutation(mutationF);
     }
 
     /**
@@ -153,11 +150,11 @@ public class SPEA2 extends Algorithm {
      * This method generates the first set of random solutions. The number of
      * solutions to be generated it's configured by numSol field.
      *
-     * @param myProblem the current problem state.
+     * @param problems the current problem(s) state(s).
      * @return a ns ArrayList of Solution
      */
     @Override
-    public ArrayList<Solution> initialize(Problem myProblem) {
+    public ArrayList<Solution> initialize(ArrayList<Problem> problems) {
 
         // reset sequence data
         population = new ArrayList<>();
@@ -166,6 +163,7 @@ public class SPEA2 extends Algorithm {
         dominance = new SolutionDominance();
         K = (int) Math.sqrt(ns + ns);
         rnd = new Random();
+        alreadyChosen = new HashSet<>();        
         firstIteration = true;
 
         // create a new set of solutions from scratch
@@ -173,7 +171,15 @@ public class SPEA2 extends Algorithm {
 
         for (int i = 0; i < ns; ++i) {
 
-            Solution iSol = myProblem.newSolution();
+            // select randomly a scenario definition from the problem pool
+            int problemIdx = rnd.nextInt(problems.size());
+            if (alreadyChosen.contains(problemIdx) && alreadyChosen.size() < problems.size()) {
+                do {
+                    problemIdx = rnd.nextInt(problems.size());
+                } while (alreadyChosen.contains(problemIdx));
+            }
+            alreadyChosen.add(problemIdx);
+            Solution iSol = problems.get(problemIdx).newSolution();
 
             // for each uav in the solution
             for (int u = 0; u < iSol.getUavs().size(); ++u) {
@@ -229,7 +235,7 @@ public class SPEA2 extends Algorithm {
                 Solution child = new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams);
+                        objectives);
                 population.add(child);
             }
 
@@ -255,7 +261,7 @@ public class SPEA2 extends Algorithm {
                 archive.add(new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams));
+                        objectives));
             }
             firstIteration = false;
         }
@@ -282,6 +288,27 @@ public class SPEA2 extends Algorithm {
         // return
         return offSpring;
 
+    }
+
+    @Override
+    public void tradeIn(ArrayList<Solution> solutions) {
+        // create the union between the archive and the tradeIn solutions
+        ArrayList<Solution> union = new ArrayList<>();
+        union.addAll(archive);
+        solutions.forEach(solution -> {
+            union.add(solution.clone());
+        });
+        assignFitness(union);
+
+        // reduce the archive
+        ArrayList<Solution> unionReduced = reduceByFitness(union);
+        if (unionReduced.size() < ns) // External archive size
+        {
+            expand(unionReduced, union, ns - unionReduced.size());
+        } else if (unionReduced.size() > ns) {
+            unionReduced = reduce(unionReduced, ns);
+        }
+        archive = unionReduced;
     }
 
     public void assignFitness(ArrayList<Solution> solutions) {
@@ -342,11 +369,11 @@ public class SPEA2 extends Algorithm {
     }
 
     public double euclideanDistance(Solution sol1, Solution sol2) {
-        int nObjs = Math.min(sol1.getObjectives().size(), sol2.getObjectives().size());
+        int nObjs = Math.min(sol1.getResults().size(), sol2.getResults().size());
 
         double sum = 0;
         for (int i = 0; i < nObjs; i++) {
-            sum += ((sol1.getObjectives().get(i) - sol2.getObjectives().get(i)) * (sol1.getObjectives().get(i) - sol2.getObjectives().get(i)));
+            sum += ((sol1.getResults().get(i) - sol2.getResults().get(i)) * (sol1.getResults().get(i) - sol2.getResults().get(i)));
         }
         return Math.sqrt(sum);
     }

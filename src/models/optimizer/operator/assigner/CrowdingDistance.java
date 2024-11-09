@@ -54,19 +54,21 @@ public class CrowdingDistance {
         for (int i = 0; i < numberOfObjectives; ++i) {
             // Sort the population by objective i
             Collections.sort(solutions, new ObjectiveComparator(i));
-            objetiveMinn = solutions.get(0).getObjectives().get(i);
-            objetiveMaxn = solutions.get(size - 1).getObjectives().get(i);
+            objetiveMinn = solutions.get(0).getResults().get(i);
+            objetiveMaxn = solutions.get(size - 1).getResults().get(i);
+            // check not extremes are equal, this means all values are the same for the objective
+            if (!(objetiveMaxn - objetiveMinn == 0)) {
+                //Set the crowding distance
+                solutions.get(0).getProperties().put(propertyCrowdingDistance, Double.POSITIVE_INFINITY);
+                solutions.get(size - 1).getProperties().put(propertyCrowdingDistance, Double.POSITIVE_INFINITY);
 
-            //Set the crowding distance
-            solutions.get(0).getProperties().put(propertyCrowdingDistance, Double.POSITIVE_INFINITY);
-            solutions.get(size - 1).getProperties().put(propertyCrowdingDistance, Double.POSITIVE_INFINITY);
-
-            for (int j = 1; j < size - 1; j++) {
-                distance = solutions.get(j + 1).getObjectives().get(i) - solutions.get(j - 1).getObjectives().get(i);
-                distance = distance / (objetiveMaxn - objetiveMinn);
-                distance += solutions.get(j).getProperties().get(propertyCrowdingDistance).doubleValue();
-                solutions.get(j).getProperties().put(propertyCrowdingDistance, distance);
-            } // for
+                for (int j = 1; j < size - 1; j++) {
+                    distance = solutions.get(j + 1).getResults().get(i) - solutions.get(j - 1).getResults().get(i);
+                    distance = distance / (objetiveMaxn - objetiveMinn);
+                    distance += solutions.get(j).getProperties().get(propertyCrowdingDistance).doubleValue();
+                    solutions.get(j).getProperties().put(propertyCrowdingDistance, distance);
+                } // for
+            }
         } // for
 
         return solutions;

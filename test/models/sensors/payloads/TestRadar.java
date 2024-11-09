@@ -21,9 +21,9 @@ public class TestRadar {
 
     public static void main(String[] args) {
         Geographic searchAreaPos = new Geographic(0.0, 0.0);
-        SearchArea searchArea = new SearchArea(searchAreaPos, 15000, 15000, 25, 25, 0.0);
-        Radar p1 = new Radar("radarA", 5.0, searchArea);
-        UavState uavState = new UavState(7500, 7500, 200, 0, 0, 0, 0);
+        SearchArea searchArea = new SearchArea(searchAreaPos, 30000, 20000, 80, 80, 0.0);
+        Radar p1 = new Radar("radarTest", 5.0, searchArea);
+        UavState uavState = new UavState(30000, 20000, 975, 0, 0, 0, 0);
         p1.setUavState(uavState);
         Likelihood sensorNDP = p1.evaluate();
         try {

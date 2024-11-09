@@ -80,7 +80,7 @@ public class Problem {
                 double sensorStartTime = solSensors.get(s).getFinalState().getTime();
                 double sensorEndTime = solSensors.get(s).getEndTime();
                 if (!sensorsDef.get(s).isStatic()) {
-                    DinamicModel sensorMM = (DinamicModel) sensorsDef.get(s).getMotionModel();
+                    DinamicModel sensorMM = (DinamicModel) solSensors.get(s).getMotionModel();
                     sensorStartTime += sensorMM.getAt();
                 }
 
@@ -191,6 +191,8 @@ public class Problem {
                 } else {
                     newUav.setSeqEndTime(endSequenceTime);
                 }
+            } else {
+                newUav.setSeqEndTime(endSequenceTime);
             }
 
             // initial state for newUav should be lastUavState simulated
@@ -228,6 +230,8 @@ public class Problem {
                         sensorsDef.get(s).setSeqEndTime(endSequenceTime);
 
                     }
+                } else {
+                    sensorsDef.get(s).setSeqEndTime(endSequenceTime);
                 }
 
                 if (!sensorsDef.get(s).isStatic()) {

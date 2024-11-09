@@ -280,8 +280,8 @@
         },
         "logIterations": false,
         "constraints": ["nfz", "collision"],
-        "paretos": ["heurist", "etd", "pd"],
-        "order": ["nfz", "collision", "heurist", "etd", "pd"]
+        "paretos": ["myo", "etd", "pd"],
+        "order": ["nfz", "collision", "myo", "etd", "pd"]
     },
     "algorithms": [
         {

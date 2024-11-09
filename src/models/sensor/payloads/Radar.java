@@ -45,7 +45,7 @@ public class Radar extends Payload {
         difY = (double) sensorParameters.get("difY");
         pfa = 0.000001;
         tnr = -Math.log(pfa);
-        a = -(tnr / Math.log(pstd) + 1.0) * (Math.pow(dstd, 4.0));        
+        a = -(tnr / Math.log(pstd) + 1.0) * (Math.pow(dstd, 4.0));
     }
 
     public Radar(Radar fun) {
@@ -74,7 +74,7 @@ public class Radar extends Payload {
         difY = (double) sensorParameters.get("difY");
         pfa = 0.000001;
         tnr = -Math.log(pfa);
-        a = -(tnr / Math.log(pstd) + 1.0) * (Math.pow(dstd, 4.0));        
+        a = -(tnr / Math.log(pstd) + 1.0) * (Math.pow(dstd, 4.0));
     }
 
     /**
@@ -174,7 +174,7 @@ public class Radar extends Payload {
      * for the radar.
      *
      * @return Likelihood as NDP.
-     */    
+     */
     @Override
     public Likelihood evaluate() {
 
@@ -189,15 +189,15 @@ public class Radar extends Payload {
                 // current point X,Y coordinates (uav is at the center of the matrix)
                 double pointX, pointY;
                 pointX
-                        = -(radarMatrix.getNumRows() / 2) * difX + x * difX;
+                        = -(radarMatrix.getNumRows() / 2) * difX + x * difX + uavState.getX();
                 pointY
-                        = -(radarMatrix.getNumCols() / 2) * difX + y * difY;
+                        = -(radarMatrix.getNumCols() / 2) * difY + y * difY + + uavState.getY();
 
-                // calculate in which searchArea cell is the point
+                    // calculate in which searchArea cell is the point              
                 int xCell
-                        = (int) Math.ceil((pointY + uavState.getY()) / sensorLikelihood.getxScale());
+                        = (int) Math.floor(pointY / sensorLikelihood.getyScale());
                 int yCell
-                        = (int) Math.ceil((pointX + uavState.getX()) / sensorLikelihood.getyScale());
+                        = (int) Math.floor(pointX / sensorLikelihood.getxScale());
 
                 // check the point is inside the searchArea
                 if (xCell >= 0 && xCell < sensorLikelihood.getxCells()
@@ -219,10 +219,10 @@ public class Radar extends Payload {
 
     /**
      * This method calculate the radar measure points whithin the scope of the
-     * sensor. The scope is calculated by the radar maxRadius which depends on the
-     * current uavHeight.
+     * sensor. The scope is calculated by the radar maxRadius which depends on
+     * the current uavHeight.
      *
-     */        
+     */
     private void calculateRadarMatrix() {
 
         // compute number of points of the radar given the uavHeight
@@ -247,7 +247,7 @@ public class Radar extends Payload {
                 double pointX
                         = -(radarMatrix.getNumRows() / 2) * difX + x * difX;
                 double pointY
-                        = -(radarMatrix.getNumCols() / 2) * difX + y * difY;
+                        = -(radarMatrix.getNumCols() / 2) * difY + y * difY;
 
                 // calculate radius & distance to the current point
                 double radius

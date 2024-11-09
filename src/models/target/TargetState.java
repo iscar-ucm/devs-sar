@@ -18,8 +18,7 @@ public class TargetState {
     private double time;
     private double pd;        // detection probability
     private double etd;       // expected time detection
-    private double heuristic; // myopia criteria    
-    private double missPd;    // probability lost due to a motion model prediction    
+    private double myo;       // myopia criteria    
 
     /**
      *
@@ -30,18 +29,16 @@ public class TargetState {
      * @param time
      * @param pd
      * @param etd
-     * @param heuristic
-     * @param missPd
+     * @param myo
      */
     public TargetState(DMatrixRMaj belief, boolean prediction, double time,
-            double pd, double etd, double heuristic, double missPd) {
+            double pd, double etd, double myo) {
         this.belief = belief.copy();
         this.prediction = prediction;
         this.time = time;
         this.pd = pd;
         this.etd = etd;
-        this.heuristic = heuristic;
-        this.missPd = missPd;
+        this.myo = myo;
     }
 
     /**
@@ -59,8 +56,7 @@ public class TargetState {
         this.time = time;
         this.pd = pd;
         this.etd = etd;
-        heuristic = 0.0;
-        missPd = 0.0;
+        myo = 1.0;
     }    
     
     /**
@@ -69,14 +65,13 @@ public class TargetState {
      * @param belief
      * @param time
      */
-    public TargetState(DMatrixRMaj belief, double time, double missPd) {
+    public TargetState(DMatrixRMaj belief, boolean prediction, double time) {
         this.belief = belief;
-        prediction = true;
+        this.prediction = prediction;
         this.time = time;
         pd = 0.0;
         etd = 0.0;
-        heuristic = 1.0;
-        this.missPd = missPd;
+        myo = 1.0;
     }
 
     /**
@@ -90,8 +85,7 @@ public class TargetState {
         this.time = time;
         pd = 0.0;
         etd = 0.0;
-        heuristic = 1.0;
-        missPd = 0.0;
+        myo = 1.0;
     }    
     
     /**
@@ -104,8 +98,7 @@ public class TargetState {
         this.time = time;
         pd = 0.0;
         etd = 0.0;
-        heuristic = 1.0;
-        missPd = 0.0;
+        myo = 1.0;
     }
 
     /**
@@ -179,36 +172,22 @@ public class TargetState {
     }
 
     /**
-     * @return the heuristic
+     * @return the myo
      */
-    public double getHeuristic() {
-        return heuristic;
+    public double getMyo() {
+        return myo;
     }
 
     /**
-     * @param heuristic the heuristic to set
+     * @param myo the myo to set
      */
-    public void setHeuristic(double heuristic) {
-        this.heuristic = heuristic;
-    }
-
-    /**
-     * @return the missPd
-     */
-    public double getMissPd() {
-        return missPd;
-    }
-
-    /**
-     * @param missPd
-     */
-    public void setMissPd(double missPd) {
-        this.missPd = missPd;
+    public void setMyo(double myo) {
+        this.myo = myo;
     }
 
     @Override
     public TargetState clone() {
         return new TargetState(this.belief, this.prediction, this.time, this.pd,
-                this.etd, this.heuristic, this.missPd);
+                this.etd, this.myo);
     }
 }

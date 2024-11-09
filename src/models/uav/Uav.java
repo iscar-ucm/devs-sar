@@ -28,6 +28,7 @@ public class Uav {
     private UavCntrlType controlType;
     private double controlAt;
     private MotionModel motionModel;
+    private double initHeading;
     private double endTime;
     private double seqEndTime;
     private double endFuel;
@@ -35,9 +36,6 @@ public class Uav {
     private ArrayList<UavState> path;
     private ArrayList<UavCntrlSignals> prevCntrlSignals;
     private ArrayList<UavCntrlSignals> cntrlSignals;
-    private int totalNFZs;
-    private int totalCollisions;
-    private int totalFuelEmpties;
     private double smoothValue;
 
     /**
@@ -72,20 +70,21 @@ public class Uav {
                 (double) jsInitState.get("lat"),
                 (double) jsInitState.get("lng")
         );
-        UavState initState = new UavState(
-                uavInitGeoPos,
-                (double) jsInitState.get("alt"),
-                (double) jsInitState.get("heading"),
-                (double) jsInitState.get("speed"),
-                (double) jsInitState.get("fuel"),
-                (double) jsInitState.get("time"));
         // convert geographic to cartesian 
         Cartesian uavInitXYPos = Geographic.toCartesian(
                 uavInitGeoPos,
                 searchArea.getGeoPos(),
                 searchArea.getAreaBearing()
         );
-        initState.setXyPos(uavInitXYPos);
+        UavState initState = new UavState(
+                uavInitXYPos.getX(),
+                uavInitXYPos.getY(),
+                (double) jsInitState.get("alt"),
+                (double) jsInitState.get("heading"),
+                (double) jsInitState.get("speed"),
+                (double) jsInitState.get("fuel"),
+                (double) jsInitState.get("time"));
+        initHeading = initState.getHeading();
         // add initState as the first state in the uav path
         path = new ArrayList<>();
         path.add(initState);
@@ -106,10 +105,6 @@ public class Uav {
         // init the cntrlSignals arrays
         cntrlSignals = new ArrayList<>();
         prevCntrlSignals = new ArrayList<>();
-        // init other data
-        totalNFZs = 0;
-        totalCollisions = 0;
-        totalFuelEmpties = 0;
         smoothValue = 0.0;
     }
 
@@ -118,10 +113,9 @@ public class Uav {
      *
      */
     public Uav(String name, String type, UavCntrlType controlType, double controlAt,
-            MotionModel motionModel, UavState initState, double endTime,
-            double seqEndTime, double endFuel, ArrayList<Sensor> sensors, 
-            ArrayList<UavCntrlSignals> prevCntrlSignals, int totalNFZs, int totalCollisions,
-            int totalFuelEmpties, double smoothValue) {
+            MotionModel motionModel, UavState initState, double initHeading, double endTime,
+            double seqEndTime, double endFuel, ArrayList<Sensor> sensors,
+            ArrayList<UavCntrlSignals> prevCntrlSignals) {
         this.name = name;
         this.type = type;
         this.controlType = controlType;
@@ -137,6 +131,7 @@ public class Uav {
         // init path
         this.path = new ArrayList<>();
         this.path.add(initState.clone());
+        this.initHeading = initHeading;
         this.endFuel = endFuel;
         this.endTime = endTime;
         this.seqEndTime = seqEndTime;
@@ -151,11 +146,7 @@ public class Uav {
         this.prevCntrlSignals = new ArrayList<>();
         for (short i = 0; i < prevCntrlSignals.size(); i++) {
             this.prevCntrlSignals.add(prevCntrlSignals.get(i).clone());
-        }        
-        this.totalNFZs = totalNFZs;
-        this.totalCollisions = totalCollisions;
-        this.totalFuelEmpties = totalFuelEmpties;
-        this.smoothValue = smoothValue;
+        }
     }
 
     /**
@@ -163,10 +154,9 @@ public class Uav {
      *
      */
     public Uav(String name, String type, UavCntrlType controlType, double controlAt,
-            MotionModel motionModel, ArrayList<UavState> path, double endTime,
+            MotionModel motionModel, ArrayList<UavState> path, double initHeading, double endTime,
             double seqEndTime, double endFuel, ArrayList<Sensor> sensors,
-            ArrayList<UavCntrlSignals> prevCntrlSignals, ArrayList<UavCntrlSignals> cntrlSignals,
-            int totalNFZs, int totalCollisions, int totalFuelEmpties, double smoothValue) {
+            ArrayList<UavCntrlSignals> prevCntrlSignals, ArrayList<UavCntrlSignals> cntrlSignals) {
         this.name = name;
         this.type = type;
         this.controlType = controlType;
@@ -184,6 +174,7 @@ public class Uav {
         for (short i = 0; i < path.size(); i++) {
             this.path.add(path.get(i).clone());
         }
+        this.initHeading = initHeading;
         this.endFuel = endFuel;
         this.endTime = endTime;
         this.seqEndTime = seqEndTime;
@@ -200,11 +191,7 @@ public class Uav {
         this.prevCntrlSignals = new ArrayList<>();
         for (short i = 0; i < prevCntrlSignals.size(); i++) {
             this.prevCntrlSignals.add(prevCntrlSignals.get(i).clone());
-        }        
-        this.totalNFZs = totalNFZs;
-        this.totalCollisions = totalCollisions;
-        this.totalFuelEmpties = totalFuelEmpties;
-        this.smoothValue = smoothValue;
+        }
     }
 
     /**
@@ -275,6 +262,20 @@ public class Uav {
      */
     public void setMotionModel(MotionModel motionModel) {
         this.motionModel = motionModel;
+    }
+
+    /**
+     * @return the initHeading
+     */
+    public double getInitHeading() {
+        return initHeading;
+    }
+
+    /**
+     * @param initHeading the initHeading to set
+     */
+    public void setInitHeading(double initHeading) {
+        this.initHeading = initHeading;
     }
 
     /**
@@ -381,7 +382,7 @@ public class Uav {
     public ArrayList<UavCntrlSignals> getPrevCntrlSignals() {
         return prevCntrlSignals;
     }
-    
+
     /**
      * @return the cntrlSignals
      */
@@ -399,57 +400,33 @@ public class Uav {
     /**
      * @return the totalNFZs
      */
-    public int getTotalNFZs() {
-        return totalNFZs;
-    }
-
-    /**
-     *
-     */
-    public void setTotalNFZs() {
-        ++totalNFZs;
+    public int getNFZs() {
+        return getFinalState().getNfzs();
     }
 
     /**
      * @return the totalCollisions
      */
-    public int getTotalCollisions() {
-        return totalCollisions;
-    }
-
-    /**
-     *
-     */
-    public void setTotalCollisions() {
-        ++totalCollisions;
-    }
-
-    /**
-     * @return the totalFuelEmpties
-     */
-    public int getTotalFuelEmpties() {
-        return totalFuelEmpties;
-    }
-
-    /**
-     *
-     */
-    public void setTotalFuelEmpties() {
-        ++totalFuelEmpties;
+    public int getCol() {
+        return getFinalState().getCol();
     }
 
     /**
      * @return the smoothValue
      */
     public double getSmoothValue() {
-        return smoothValue;
-    }
-
-    /**
-     * @param smoothValue the smoothValue to set
-     */
-    public void setSmoothValue(double smoothValue) {
-        this.smoothValue = smoothValue;
+        double smooth;
+        if (!cntrlSignals.isEmpty()) {
+            // uav has flown this sequence
+            smooth = cntrlSignals.get(cntrlSignals.size() - 1).getSmooth();
+        } else if (!prevCntrlSignals.isEmpty()) {
+            // uav has ended before this sequence
+            smooth = prevCntrlSignals.get(prevCntrlSignals.size() - 1).getSmooth();            
+        } else {
+            // uav hasn't started yet
+            smooth = 0.0;
+        }
+        return smooth;
     }
 
     /**
@@ -462,19 +439,14 @@ public class Uav {
         return new Uav(
                 this.name,
                 this.type,
-                this.controlType,
-                this.controlAt,
+                this.controlType, this.getControlAt(),
                 this.motionModel,
-                this.getInitState(),
+                this.getInitState(), this.getInitHeading(),
                 this.endTime,
                 this.seqEndTime,
                 this.endFuel,
                 this.getSensors(),
-                this.getPrevCntrlSignals(),
-                this.totalNFZs,
-                this.totalCollisions,
-                this.totalFuelEmpties,
-                this.smoothValue);
+                this.getPrevCntrlSignals());
     }
 
     @Override
@@ -488,19 +460,14 @@ public class Uav {
         return new Uav(
                 this.name,
                 this.type,
-                this.controlType,
-                this.controlAt,
+                this.controlType, this.getControlAt(),
                 this.motionModel,
-                this.getPath(),
+                this.getPath(), this.getInitHeading(),
                 this.endTime,
                 this.seqEndTime,
                 this.endFuel,
                 this.getSensors(),
                 this.getPrevCntrlSignals(),
-                this.getCntrlSignals(),
-                this.totalNFZs,
-                this.totalCollisions,
-                this.totalFuelEmpties,
-                this.smoothValue);
+                this.getCntrlSignals());
     }
 }

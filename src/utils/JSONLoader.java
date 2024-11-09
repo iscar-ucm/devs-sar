@@ -43,8 +43,8 @@ public class JSONLoader {
             LOGGER.severe(ee.getLocalizedMessage());
         }
         return scenarioJson;
-    }    
-    
+    }
+
     /**
      * @param uavType
      * @return the json
@@ -85,9 +85,9 @@ public class JSONLoader {
         return rungeKuttaParam;
     }
 
-    public static JSONObject getCntrlParam() {
+    public static JSONObject getCntrlParam(String factorsFile) {
         String jsonFilePath = "data" + File.separator + "algorithms"
-                + File.separator + "paretos.json";
+                + File.separator + factorsFile + ".json";
         JSONObject paretosJS = null;
         try {
             paretosJS = JSONLoader.loadJSON(jsonFilePath);
@@ -95,6 +95,6 @@ public class JSONLoader {
             LOGGER.severe(ee.getLocalizedMessage());
         }
         return paretosJS;
-    }    
-    
+    }
+
 }

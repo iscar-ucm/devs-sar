@@ -9,12 +9,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import models.optimizer.CntrlParams;
 import models.optimizer.DecisionVar;
 import models.optimizer.DecisionVarType;
+import models.optimizer.Objectives;
 import models.optimizer.Problem;
 import models.optimizer.Solution;
-import models.optimizer.operator.retrieve.Retrieve;
+import models.optimizer.operator.migration.Diversity;
+import models.optimizer.operator.migration.FirstFront;
+import models.optimizer.operator.migration.RandomRetrieve;
+import models.optimizer.operator.migration.Migrate;
 import models.sensor.Sensor;
 import models.sensor.SensorCntrlSignals;
 import models.sensor.motionModels.DinamicModel;
@@ -33,24 +36,56 @@ public abstract class Algorithm {
 
     // General algorithm characteristics
     protected AlgorithmType type;
+    protected Objectives objectives;
     protected int ns; // number of solutions to be generated per iteration
+    protected int nf; // number of final solutions to be output
+    private double sequenceTime;    
+    protected String sortingMethod;      
     protected boolean firstIteration;
 
-    // Exchange operator
-    protected Retrieve exchangeOperator;
-
-    // Control parameters to drive the algorithm operation
-    protected CntrlParams cntrlParams;
+    // migration method
+    protected int ni; // number of iterations to execute the migration process     
+    protected Migrate migrationOperator;
 
     /**
      *
      * @param algorithmJSON
-     * @param cntrlParams
      */
-    public Algorithm(JSONObject algorithmJSON, CntrlParams cntrlParams) {
+    public Algorithm(JSONObject algorithmJSON) {
         type = AlgorithmType.valueOf((String) algorithmJSON.get("type"));
         ns = (int) (long) algorithmJSON.get("ns");
-        this.cntrlParams = cntrlParams;
+        nf = (int) (long) algorithmJSON.get("nf");
+        // read sequenceTime
+        sequenceTime = (double) algorithmJSON.get("sequenceTime");  
+        // read optimization objetives
+        objectives = new Objectives((JSONObject) algorithmJSON.get("objectives"));
+        // read sorting method
+        sortingMethod = (String) algorithmJSON.get("sortingMethod");        
+        // read exchange solution method
+        JSONObject migrationJS = (JSONObject) algorithmJSON.get("migration");
+        MigrationType exchangeType
+                = MigrationType.valueOf((String) migrationJS.get("type"));
+        int nx;
+        switch (exchangeType) {
+            case firstFront:
+                ni = (int) (long) migrationJS.get("ni");             
+                migrationOperator = new FirstFront();
+                break;
+            case diversity:  
+                ni = (int) (long) migrationJS.get("ni");                
+                nx = (int) (long) migrationJS.get("nx");
+                migrationOperator = new Diversity(nx, sortingMethod);
+                break;
+            case random:
+                ni = (int) (long) migrationJS.get("ni");                
+                nx = (int) (long) migrationJS.get("nx");                
+                migrationOperator = new RandomRetrieve(nx);
+                break;
+            case none:
+                ni = 0;
+                break;
+        }
+
         firstIteration = true;
     }
 
@@ -83,17 +118,59 @@ public abstract class Algorithm {
     }
 
     /**
-     * @return the cntrlParams
+     * @return the nf
      */
-    public CntrlParams getCntrlParams() {
-        return cntrlParams;
+    public int getNf() {
+        return nf;
     }
 
     /**
-     * @param cntrlParams the cntrlParams to set
+     * @param nf the nf to set
      */
-    public void setCntrlParams(CntrlParams cntrlParams) {
-        this.cntrlParams = cntrlParams;
+    public void setNf(int nf) {
+        this.nf = nf;
+    }
+
+    /**
+     * @return the sequenceTime
+     */
+    public double getSequenceTime() {
+        return sequenceTime;
+    }
+
+    /**
+     * @param sequenceTime the sequenceTime to set
+     */
+    public void setSequenceTime(double sequenceTime) {
+        this.sequenceTime = sequenceTime;
+    }
+
+    /**
+     * @return the objectives
+     */
+    public Objectives getObjectives() {
+        return objectives;
+    }
+
+    /**
+     * @param objectives the objectives to set
+     */
+    public void setObjectives(Objectives objectives) {
+        this.objectives = objectives;
+    }
+
+    /**
+     * @return the sortingMethod
+     */
+    public String getSortingMethod() {
+        return sortingMethod;
+    }
+
+    /**
+     * @param sortingMethod the sortingMethod to set
+     */
+    public void setSortingMethod(String sortingMethod) {
+        this.sortingMethod = sortingMethod;
     }
 
     /**
@@ -108,6 +185,34 @@ public abstract class Algorithm {
      */
     public void setFirstIteration(boolean firstIteration) {
         this.firstIteration = firstIteration;
+    }    
+
+    /**
+     * @return the ni
+     */
+    public int getNi() {
+        return ni;
+    }
+
+    /**
+     * @param ni the ni to set
+     */
+    public void setNi(int ni) {
+        this.ni = ni;
+    }
+    
+    /**
+     * @return the migrationOperator
+     */
+    public Migrate getMigrationOperator() {
+        return migrationOperator;
+    }
+
+    /**
+     * @param migrationOperator the migrationOperator to set
+     */
+    public void setMigrationOperator(Migrate migrationOperator) {
+        this.migrationOperator = migrationOperator;
     }
 
     /**
@@ -130,11 +235,11 @@ public abstract class Algorithm {
      * This method generates the first set of random solutions. The method it's
      * abstract and should be overrided by the specific algorithm.
      *
-     * @param myProblem the current problem state.
+     * @param problems the current problem(s) state(s).
      *
      * @return a new set of solutions to be evaluated.
      */
-    public abstract ArrayList<Solution> initialize(Problem myProblem);
+    public abstract ArrayList<Solution> initialize(ArrayList<Problem> problems);
 
     /**
      * This method updates the algorithm with the results of the evaluation
@@ -156,6 +261,27 @@ public abstract class Algorithm {
      * @return the new set of solutions to be evaluated.
      */
     public abstract ArrayList<Solution> iterate();
+
+    /**
+     * This method receives a set of intermediate solutions from another
+     * algorithm and incorporate them into the iterative process.
+     *
+     * @param solutions
+     */
+    public abstract void tradeIn(ArrayList<Solution> solutions);
+
+    /**
+     * This method retrives a set of intermediate solutions to exchange them
+     * with another algorithm.
+     *
+     * @return the solutions to exchange.
+     */
+    public ArrayList<Solution> tradeOut() {
+        ArrayList<Solution> currentSet, outSolutions;
+        currentSet = getSolutions();
+        outSolutions = getMigrationOperator().execute(currentSet);
+        return outSolutions;
+    }
 
     /**
      * This method generates for the given uav the UavCntrlSignals arraylist in
@@ -445,7 +571,7 @@ public abstract class Algorithm {
 
             // log PD
             double bestDP
-                    = bestTgtSolution.get(t).getDp();
+                    = bestTgtSolution.get(t).getPd();
 
             LOGGER.log(Level.FINE,
                     String.format("Tgt%1$s Best DP : %2$s",
@@ -456,7 +582,7 @@ public abstract class Algorithm {
 
             // log Heurist
             double bestHeurist
-                    = bestTgtSolution.get(t).getHeuristic();
+                    = bestTgtSolution.get(t).getMyo();
 
             LOGGER.log(Level.FINE,
                     String.format("Tgt%1$s Best Heurist : %2$s",

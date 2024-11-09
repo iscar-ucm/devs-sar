@@ -25,7 +25,7 @@ public class OpInputs extends Atomic {
     private static final Logger LOGGER = Logger.getLogger(OpInputs.class.getName());
 
     // in Ports of the model
-    public Port<Solution> tiI1 = new Port<>("finalSolution"); // set of final solutions
+    public Port<ArrayList<Solution>> tiI1 = new Port<>("finalSolutions"); // set of final solutions
 
     // out Ports of the model
     public Port<Scenario> tiO1 = new Port<>("scenario");
@@ -34,8 +34,9 @@ public class OpInputs extends Atomic {
     private JSONObject scenarioJSON;
     private Scenario myScenario;
     private Algorithm myAlgorithm;
-    private Solution finalSolution;
+    private ArrayList<Solution> finalSolutions;
     private int currentAlgorithm, currentRun;
+    private double startTime, endTime;
     private CSVHandler csvHandler;
 
     public OpInputs(JSONObject jsonRoot, CSVHandler csvHandler) {
@@ -43,14 +44,14 @@ public class OpInputs extends Atomic {
         super.addInPort(tiI1);
         super.addOutPort(tiO1);
         scenarioJSON = jsonRoot;
-        this.csvHandler = csvHandler;
+        this.csvHandler = csvHandler;       
     }
 
     @Override
     public void initialize() {
         currentRun = 1;
         currentAlgorithm = 0;
-        finalSolution = null;
+        finalSolutions = new ArrayList<>();
         myScenario = new Scenario(scenarioJSON);
         csvHandler.setOptimizerPath(
                 currentAlgorithm + 1, myScenario.getalgorithms().get(currentAlgorithm).getType().toString());
@@ -58,11 +59,15 @@ public class OpInputs extends Atomic {
         myAlgorithm = myScenario.getalgorithms().get(currentAlgorithm);
         myScenario.getalgorithms().clear();
         myScenario.getalgorithms().add(myAlgorithm);
+        startTime = System.currentTimeMillis();
+        endTime = 0.0;
         super.holdIn("run", 0.0);
     }
 
     @Override
     public void exit() {
+        startTime = 0.0;
+        endTime = 0.0;        
         super.passivate();
     }
 
@@ -79,12 +84,15 @@ public class OpInputs extends Atomic {
     public void deltext(double e) {
         if (phaseIs("waiting")) {
             if (!tiI1.isEmpty()) {
-                finalSolution = tiI1.getSingleValue();
+                finalSolutions = tiI1.getSingleValue();
             }
+            endTime = (System.currentTimeMillis() - startTime) / 1000.0;
             // write current run results
             csvHandler.writeRun(
-                    currentRun,
-                    finalSolution);
+                    currentRun,                  
+                    endTime,
+                    myAlgorithm.getObjectives(),                      
+                    finalSolutions);
 
             LOGGER.log(Level.INFO,
                     String.format("##### %1$s: RUN %2$s   ENDS #####",
@@ -97,11 +105,13 @@ public class OpInputs extends Atomic {
             if (currentRun < myScenario.getParams().getNumOfRuns()) {
                 currentRun++;
                 myScenario = new Scenario(scenarioJSON);
-                finalSolution = null;
+                finalSolutions = new ArrayList<>();
                 // reduce scenario algorithms to the current one
                 myAlgorithm = myScenario.getalgorithms().get(currentAlgorithm);
                 myScenario.getalgorithms().clear();
                 myScenario.getalgorithms().add(myAlgorithm);
+                startTime = System.currentTimeMillis();
+                endTime = 0.0;                
                 super.holdIn("run", 0.0);
             } else {
                 /**
@@ -110,7 +120,7 @@ public class OpInputs extends Atomic {
                 csvHandler.writeOpResults();
                 currentAlgorithm++;
                 myScenario = new Scenario(scenarioJSON);
-                finalSolution = null;
+                finalSolutions = new ArrayList<>();
                 // check if another algorithm is required
                 if (currentAlgorithm < myScenario.getalgorithms().size()) {
                     currentRun = 1;
@@ -120,6 +130,8 @@ public class OpInputs extends Atomic {
                     myAlgorithm = myScenario.getalgorithms().get(currentAlgorithm);
                     myScenario.getalgorithms().clear();
                     myScenario.getalgorithms().add(myAlgorithm);
+                    startTime = System.currentTimeMillis();
+                    endTime = 0.0;                    
                     super.holdIn("run", 0.0);
                 } else {
                     super.holdIn("end", 0.0);

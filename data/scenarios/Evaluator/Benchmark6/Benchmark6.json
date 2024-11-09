@@ -113,7 +113,7 @@
                 ],
                 "time": 0.0
             },
-            "endTime": 500.0
+            "endTime": 400.0
         }
     ],
     "uavs": [
@@ -162,7 +162,7 @@
             "finalState": 
                     {
                         "fuel": 200.0,
-                        "time": 500.0
+                        "time": 400.0
                     },
             "sensors": 
                     [
@@ -182,7 +182,7 @@
                                     {                    
                                         "time": 0.0          
                                     },
-                            "endTime": 500.0                  
+                            "endTime": 400.0                  
                         }                
                     ]
         },        
@@ -231,7 +231,7 @@
             "finalState": 
                     {
                         "fuel": 200.0,
-                        "time": 500.0
+                        "time": 400.0
                     },
             "sensors": 
                     [
@@ -272,28 +272,28 @@
                                         "elevation": 45.0,
                                         "time": 0.0          
                                     },
-                            "endTime": 500.0                  
+                            "endTime": 400.0                  
                         }                
                     ]
         }
     ],
     "cntrlParams": {
         "numOfRuns": 1,
-        "subsequence": 100.0,
         "stopCriteria": {
             "iterations": 100,
             "time": 300.0,
             "pd": 1.0
         },
-        "exchangeIteration": 0,    
-        "logIterations": true,        
-        "constraints": ["nfz", "collision"],
-        "paretos": ["heurist", "etd", "pd"],
-        "sortingMethod": "CROWDING_DISTANCE"  
+        "logIterations": true
     },
     "algorithms": [
         {
             "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
             "selection": {
                 "method": "binaryTournament"
             },
@@ -301,11 +301,22 @@
                 "factor": 0.8,
                 "method": "singlePoint"
             },
-            "mutation": [0.1, 0.01],                        
-            "ns": 50
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 100.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
         },
         {
             "type": "spea2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
             "selection": {
                 "method": "binaryTournament"
             },
@@ -313,8 +324,14 @@
                 "factor": 0.8,
                 "method": "singlePoint"
             },
-            "mutation": [0.1, 0.01],     
-            "ns": 50
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 100.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
         }
     ]
 }

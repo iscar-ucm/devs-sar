@@ -21,12 +21,14 @@ public class UavCntrlSignals {
     private double cElevation;
     @CsvBindByName(column = "time", required = true)      
     private double time;
+    private double smooth;    
 
     public UavCntrlSignals() {
-        this.cSpeed = 0.0;
-        this.cHeading = 0.0;
-        this.cElevation = 0.0;
-        this.time = 0.0;
+        cSpeed = 0.0;
+        cHeading = 0.0;
+        cElevation = 0.0;
+        time = 0.0;
+        smooth = 0.0;
     }
 
     /**
@@ -40,7 +42,22 @@ public class UavCntrlSignals {
         this.cHeading = heading;
         this.cElevation = elevation;
         this.time = time;
+        smooth = 0.0;
     }
+    
+    /**
+     * @param speed
+     * @param heading
+     * @param elevation
+     * @param time
+     */
+    public UavCntrlSignals(double speed, double heading, double elevation, double time, double smooth) {
+        this.cSpeed = speed;
+        this.cHeading = heading;
+        this.cElevation = elevation;
+        this.time = time;
+        this.smooth = smooth;
+    }    
 
     /**
      * @return the cSpeed
@@ -98,13 +115,27 @@ public class UavCntrlSignals {
         this.time = time;
     }
 
+    /**
+     * @return the smooth
+     */
+    public double getSmooth() {
+        return smooth;
+    }
+
+    /**
+     * @param smooth the smooth to set
+     */
+    public void setSmooth(double smooth) {
+        this.smooth = smooth;
+    }
+
     @Override
     public UavCntrlSignals clone() {
         return new UavCntrlSignals(
                 this.cSpeed,
                 this.cHeading,
                 this.cElevation,
-                this.time);
+                this.time, this.getSmooth());
     }    
     
 }

@@ -40,7 +40,7 @@ public abstract class TargetControl extends Atomic {
     protected TargetState currentState;
     protected DMatrixRMaj targetBelief;
     protected ArrayList<Likelihood> sensorLikelihoods;
-    protected double clock, prevTime, scenarioTime, endTime, etd, dp, missPd;
+    protected double clock, prevTime, scenarioTime, endTime, etd, pd, missPd, prevProb, newProb;
 
     public TargetControl(String coupledName, int numSensors) {
         super(coupledName + " TC");
@@ -70,7 +70,7 @@ public abstract class TargetControl extends Atomic {
         scenarioTime = 0.0;
         endTime = 0.0;
         etd = 0.0;
-        dp = 0.0;
+        pd = 0.0;
         missPd = 0.0;
         super.passivate();
     }
@@ -86,7 +86,7 @@ public abstract class TargetControl extends Atomic {
         scenarioTime = 0.0;
         endTime = 0.0;
         etd = 0.0;
-        dp = 0.0;
+        pd = 0.0;
         missPd = 0.0;        
         super.passivate();
     }

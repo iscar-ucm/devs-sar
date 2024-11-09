@@ -1,0 +1,11 @@
+{
+    "pMax": 1.0,
+    "difX": 100.0,
+    "difY": 100.0,
+    "hFoV": 8.0,
+    "vFoV": 6.0,    
+    "aLimit": 15.0,
+    "eLimit": 15.0,
+    "aGain": 1.0,
+    "eGain": 1.0    
+}   

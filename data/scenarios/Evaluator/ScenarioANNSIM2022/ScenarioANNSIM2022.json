@@ -166,7 +166,7 @@
         "exchangeIteration": 0,    
         "logIterations": true,        
         "constraints": ["nfz", "collision"],
-        "paretos": ["heurist", "etd", "pd"],
+        "paretos": ["myo", "etd", "pd"],
         "sortingMethod": "CROWDING_DISTANCE"  
     },
     "algorithms": [
@@ -179,8 +179,12 @@
                 "factor": 0.8,
                 "method": "singlePoint"
             },
-            "mutation": [0.1, 0.01],                    
-            "ns": 50
+            "mutation": [0.1, 0.01],
+            "nf": 1,             
+            "ns": 50,
+            "migration": {
+                "type": "none"
+            }
         },
         {
             "type": "spea2",
@@ -191,8 +195,12 @@
                 "factor": 0.8,
                 "method": "singlePoint"
             },
-            "mutation": [0.1, 0.01],                     
-            "ns": 50
+            "mutation": [0.1, 0.01],
+            "nf": 1,             
+            "ns": 50,
+            "migration": {
+                "type": "none"
+            }
         },
         {
             "type": "nspso",
@@ -200,8 +208,12 @@
             "c2": 2.0,
             "chi": 1.0,
             "w": 0.4,
-            "topPartPercentage": 0.25,                      
-            "ns": 50
+            "topPartPercentage": 0.25,
+            "nf": 1,            
+            "ns": 50,
+            "migration": {
+                "type": "none"
+            }
         },
         {
             "type": "omopso",
@@ -210,8 +222,12 @@
             "chi": 1.0,
             "w": 0.4,
             "topPartPercentage": 0.25,
-            "mutation": [0.1, 0.01],                              
-            "ns": 50
+            "mutation": [0.1, 0.01],            
+            "nf": 1,             
+            "ns": 50,
+            "migration": {
+                "type": "none"
+            }
         },        
         {
             "type": "mode",
@@ -223,8 +239,12 @@
                 "factor": 0.5,
                 "method": "singlePoint"
             },
-            "mutation": [0.1, 0.01],                        
-            "ns": 50
+            "mutation": [0.1, 0.01],
+            "nf": 1,             
+            "ns": 50,
+            "migration": {
+                "type": "none"
+            }
         }
     ]
 }

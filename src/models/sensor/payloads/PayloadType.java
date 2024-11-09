@@ -10,5 +10,5 @@ package models.sensor.payloads;
  * @author jbbordon
  */
 public enum PayloadType {
-    ideal, footprint, camera, radar
+    ideal, footprint, camera, radar, radarSara
 }

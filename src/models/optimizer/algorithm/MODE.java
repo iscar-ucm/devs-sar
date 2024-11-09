@@ -6,21 +6,23 @@
 package models.optimizer.algorithm;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
-import models.optimizer.CntrlParams;
 import models.optimizer.DecisionVar;
 import models.optimizer.DecisionVarType;
 import models.optimizer.Problem;
 import models.optimizer.Solution;
+import models.optimizer.comparator.PropertyComparator;
 import models.optimizer.operator.assigner.FrontsExtractor;
 import models.optimizer.comparator.SolutionDominance;
+import models.optimizer.operator.assigner.CrowdingDistance;
+import models.optimizer.operator.assigner.NicheCount;
 import models.optimizer.operator.crossover.Binary;
 import models.optimizer.operator.crossover.CrossOver;
 import models.optimizer.operator.crossover.SinglePoint;
-import models.optimizer.operator.retrieve.Elite;
-import models.optimizer.operator.retrieve.FirstFront;
-import models.optimizer.operator.retrieve.RandomRetrieve;
-import models.optimizer.operator.retrieve.Retrieve;
+import models.optimizer.operator.migration.RandomRetrieve;
+import models.optimizer.operator.migration.Migrate;
 import models.sensor.Sensor;
 import models.sensor.SensorCntrlSignals;
 import models.sensor.SensorCntrlType;
@@ -48,33 +50,21 @@ public class MODE extends Algorithm {
 
     // operators
     private SolutionDominance dominance;
-    private Retrieve retrieveOperator;
+    private Migrate retrieveOperator;
     private CrossOver crossOverOperator;
 
     // auxiliar data
     private Random rnd;
+    private HashSet<Integer> alreadyChosen;    
 
     /**
      *
      * @param algorithmJSON
-     * @param cntrlParams
      */
-    public MODE(JSONObject algorithmJSON, CntrlParams cntrlParams) {
-        super(algorithmJSON, cntrlParams);
+    public MODE(JSONObject algorithmJSON) {
+        super(algorithmJSON);
         // read DifferentialEvolution configuration parameters 
-        JSONObject selectionJS = (JSONObject) algorithmJSON.get("retrieve");
-        switch ((String) selectionJS.get("method")) {
-            case "elite":
-                int eliteSize = (int) (long) selectionJS.get("size");
-                retrieveOperator = new Elite(eliteSize);
-                break;
-            case "firstFront":
-                retrieveOperator = new FirstFront();
-                break;
-            case "random":
-                retrieveOperator = new RandomRetrieve();
-                break;
-        }
+        retrieveOperator = new RandomRetrieve(3);
         JSONObject recombine = (JSONObject) algorithmJSON.get("recombine");
         recombineF = (double) recombine.get("factor");
         switch ((String) recombine.get("method")) {
@@ -150,11 +140,11 @@ public class MODE extends Algorithm {
      * This method generates the first set of random solutions. The number of
      * solutions to be generated it's configured by numSol field.
      *
-     * @param myProblem the current problem state.
+     * @param problems the current problem(s) state(s).
      * @return a ns ArrayList of Solution
      */
     @Override
-    public ArrayList<Solution> initialize(Problem myProblem) {
+    public ArrayList<Solution> initialize(ArrayList<Problem> problems) {
 
         // reset sequence data
         population = new ArrayList<>();
@@ -162,13 +152,23 @@ public class MODE extends Algorithm {
         dominance = new SolutionDominance();
         firstIteration = true;
         rnd = new Random();
+        alreadyChosen = new HashSet<>();
 
         // create a new set of solutions from scratch
         ArrayList<Solution> newSolutions = new ArrayList<>();
 
         for (int i = 0; i < ns; ++i) {
 
-            Solution iSol = myProblem.newSolution();
+            // generate a new solution selecting in a random way the problem
+            // definition from the actual problem pool
+            int problemIdx = rnd.nextInt(problems.size());
+            if (alreadyChosen.contains(problemIdx) && alreadyChosen.size() < problems.size()) {
+                do {
+                    problemIdx = rnd.nextInt(problems.size());
+                } while (alreadyChosen.contains(problemIdx));
+            }
+            alreadyChosen.add(problemIdx);
+            Solution iSol = problems.get(problemIdx).newSolution();
 
             // for each uav in the solution
             for (int u = 0; u < iSol.getUavs().size(); ++u) {
@@ -222,7 +222,7 @@ public class MODE extends Algorithm {
                 Solution iTrialVector = new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams);
+                        objectives);
                 int flag = dominance.compare(iTrialVector, population.get(i));
                 if (flag < 0) // the new particle is better than the older one
                 {
@@ -236,7 +236,7 @@ public class MODE extends Algorithm {
                 population.add(new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams));
+                        objectives));
             }
             firstIteration = false;
         }
@@ -261,6 +261,67 @@ public class MODE extends Algorithm {
         return trialVectors;
     }
 
+    private ArrayList<Solution> reduceTradeIn(ArrayList<Solution> pop) {
+
+        // sort current generation in fronts
+        FrontsExtractor extractor = new FrontsExtractor(dominance);
+        ArrayList<ArrayList<Solution>> fronts = extractor.execute(pop);
+
+        // combine all the fronts
+        ArrayList<Solution> reducedPop = new ArrayList<>();
+        ArrayList<Solution> front;
+        int i = 0;
+        while (reducedPop.size() < ns && i < fronts.size()) {
+            front = fronts.get(i);
+            if ((front.size() + reducedPop.size()) > ns) {
+                // add members of the current front until max size is reached
+                if (sortingMethod.startsWith("CROWDING_DISTANCE")) {
+                    CrowdingDistance assigner = new CrowdingDistance(front.get(0).getResults().size());
+                    assigner.execute(front);
+                    Collections.sort(front, new PropertyComparator(CrowdingDistance.propertyCrowdingDistance));
+                    for (int j = front.size() - 1; reducedPop.size() < ns; --j) {
+                        reducedPop.add(front.get(j));
+                    }
+
+                } else if (sortingMethod.startsWith("NICHE_COUNT")) {
+                    NicheCount assigner = new NicheCount(front.get(0).getResults().size());
+                    assigner.execute(front);
+                    Collections.sort(front, new PropertyComparator(NicheCount.propertyNicheCount));
+                    for (int j = 0; reducedPop.size() < ns; ++j) {
+                        reducedPop.add(front.get(j));
+                    }
+                }
+
+            } else {
+                // add all the members of the current front
+                reducedPop.addAll(front);
+            }
+            i++;
+        }
+        return reducedPop;
+    }    
+    
+    @Override
+    public void tradeIn(ArrayList<Solution> solutions) {
+        
+        // reduce the tradeInSolutions to fit to local ns
+        ArrayList<Solution> reducedTrade = new ArrayList<>();
+        if (solutions.size() < ns) {
+            reducedTrade = solutions;
+        } else {
+            reducedTrade = reduceTradeIn(solutions);
+        }
+        
+        // selection phase
+        for (int i = 0; i < reducedTrade.size(); i++) {
+            int flag = dominance.compare(reducedTrade.get(i), population.get(i));
+            if (flag < 0) // the new particle is better than the older one
+            {
+                population.set(i, reducedTrade.get(i));
+            }
+        }
+    }
+
     /**
      *
      */
@@ -277,18 +338,27 @@ public class MODE extends Algorithm {
             Solution parentA = noisyVectors.get(i);
             Solution parentB = population.get(i);
 
-            // croosover the parents to obtain one child
-            ArrayList<Solution> childreen
-                    = crossOverOperator.execute(parentA, parentB);
-
-            // finally add the resulting child to the trialVectors
+            // recomine condition
             double randA = rnd.nextDouble();
             if (randA < recombineF) {
-                // add first child
-                trialVectors.add(childreen.get(0));
+
+                // croosover the parents to obtain two child
+                ArrayList<Solution> childreen
+                        = crossOverOperator.execute(parentA, parentB);
+
+                // random selection of one child
+                randA = rnd.nextDouble();
+                if (randA < 0.5) {
+                    // add first child
+                    trialVectors.add(childreen.get(0));
+                } else {
+                    // add second child
+                    trialVectors.add(childreen.get(1));
+                }
+
             } else {
-                // add second child
-                trialVectors.add(childreen.get(1));
+                // add the noisy vector as it is
+                trialVectors.add(noisyVectors.get(i));
             }
         }
         return trialVectors;
@@ -350,12 +420,11 @@ public class MODE extends Algorithm {
                                 } else {
                                     newValue += 360;
                                 }
-                            } else {
-                                if (newValue > decision[d].getMaxValue()) {
-                                    newValue = decision[d].getMaxValue();
-                                } else if (newValue < decision[d].getMinValue()) {
-                                    newValue = decision[d].getMinValue();
-                                }
+                            }
+                            if (newValue > decision[d].getMaxValue()) {
+                                newValue = decision[d].getMaxValue();
+                            } else if (newValue < decision[d].getMinValue()) {
+                                newValue = decision[d].getMinValue();
                             }
 
                             iSensorCntrl.setcAzimuth(newValue);
@@ -436,12 +505,11 @@ public class MODE extends Algorithm {
                             } else {
                                 newValue += 360;
                             }
-                        } else {
-                            if (newValue > decision[d].getMaxValue()) {
-                                newValue = decision[d].getMaxValue();
-                            } else if (newValue < decision[d].getMinValue()) {
-                                newValue = decision[d].getMinValue();
-                            }
+                        }
+                        if (newValue > decision[d].getMaxValue()) {
+                            newValue = decision[d].getMaxValue();
+                        } else if (newValue < decision[d].getMinValue()) {
+                            newValue = decision[d].getMinValue();
                         }
 
                         newCntrl.setcHeading(newValue);
@@ -466,7 +534,7 @@ public class MODE extends Algorithm {
         for (int i = 0; i < ns; ++i) {
 
             Solution noisyVector = population.get(i).copy();
-            ArrayList<Solution> targetVectors = retrieveOperator.execute(population, 3);
+            ArrayList<Solution> targetVectors = retrieveOperator.execute(population);
 
             // Target vectors are selected
             ArrayList<Uav> xa = targetVectors.get(0).getUavs();

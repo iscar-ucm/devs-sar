@@ -7,7 +7,6 @@ package models.target.motionModels;
 
 import models.target.TargetState;
 import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.CommonOps_DDRM;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import utils.CommonOperations;
@@ -254,20 +253,10 @@ public class DinamicModel extends MotionModel {
 
         // check nonEscape flag and create the new state
         predictionTime += at;
-        if (!isNonEscape()) {
-            // compute probability lost
-            double prevProb = CommonOps_DDRM.elementSum(targetBelief);
-            double newProb = CommonOps_DDRM.elementSum(newBelief);
-            targetState = new TargetState(
+        targetState = new TargetState(
                     newBelief,
-                    getPredictionTime(),
-                    prevProb - newProb);
-        } else {
-            targetState = new TargetState(
-                    newBelief,
-                    getPredictionTime(),
-                    0.0);
-        }
+                    true,
+                    predictionTime);
 
         return targetState;
 

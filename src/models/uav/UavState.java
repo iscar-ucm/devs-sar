@@ -22,6 +22,8 @@ public class UavState {
     private double airSpeed;
     private double fuel;
     private double time;
+    private int col; // terrain & uavs colisions
+    private int nfzs; // non flying zones overfly 
     // uav mm variables that have to be stored for sequence optimizations
     private double xVa;
     private double xHeading;
@@ -33,27 +35,6 @@ public class UavState {
     private double cHeading; // radians
     private double cElevation;
 
-    /**
-     *
-     */
-    public UavState() {
-        xyPos = new Cartesian(0.0, 0.0);
-        geoPos = new Geographic(0.0, 0.0);
-        height = 0.0;
-        heading = 0.0;
-        airSpeed = 0.0;
-        time = 0.0;
-        fuel = 0.0;
-        xVa = 0.0;
-        xHeading = 0.0;
-        xHeight = 0.0;
-        xPIDi = 0.0;
-        xPIDd = 0.0;
-        cSpeed = 0.0;
-        cHeading = 0.0;
-        cElevation = 0.0;
-    }
-    
     /**
      *
      * @param x
@@ -69,8 +50,10 @@ public class UavState {
         this.height = height;
         this.heading = heading;
         this.airSpeed = airSpeed;
+        this.fuel = fuel;        
         this.time = time;
-        this.fuel = fuel;
+        col = 0;
+        nfzs = 0;   
         xVa = 0.0;
         xHeading = 0.0;
         xHeight = 0.0;
@@ -88,8 +71,10 @@ public class UavState {
      * @param height
      * @param heading
      * @param airSpeed
+     * @param fuel 
      * @param time
-     * @param fuel
+     * @param col
+     * @param nfzs
      * @param xVa
      * @param xHeading
      * @param xHeight
@@ -101,14 +86,17 @@ public class UavState {
      */
     public UavState(
             double x, double y, double height, double heading, double airSpeed,
-            double fuel, double time, double xVa, double xHeading, double xHeight,
-            double xPIDi, double xPIDd, double cSpeed, double cElevation, double cHeading) {
+            double fuel, double time, int col, int nfzs, double xVa, double xHeading,
+            double xHeight, double xPIDi, double xPIDd, double cSpeed, double cElevation,
+            double cHeading) {
         this.xyPos = new Cartesian(x, y);
         this.height = height;
         this.heading = heading;
         this.airSpeed = airSpeed;
+        this.fuel = fuel;        
         this.time = time;
-        this.fuel = fuel;
+        this.col = col;
+        this.nfzs = nfzs;
         this.xVa = xVa;
         this.xHeading = xHeading;
         this.xHeight = xHeight;
@@ -117,32 +105,6 @@ public class UavState {
         this.cSpeed = cSpeed;
         this.cElevation = cElevation;
         this.cHeading = cHeading;
-    }
-
-    /**
-     *
-     * @param geoPos the uav geographic pos
-     * @param height
-     * @param heading
-     * @param airSpeed
-     * @param time
-     * @param fuel
-     */
-    public UavState(Geographic geoPos, double height, double heading, double airSpeed, double fuel, double time) {
-        this.geoPos = geoPos;
-        this.height = height;
-        this.heading = heading;
-        this.airSpeed = airSpeed;
-        this.time = time;
-        this.fuel = fuel;
-        xVa = 0.0;
-        xHeading = 0.0;
-        xHeight = 0.0;
-        xPIDi = 0.0;
-        xPIDd = 0.0;
-        cSpeed = airSpeed;
-        cHeading = Math.PI * heading / 180.0;
-        cElevation = height;
     }
 
     /**
@@ -272,6 +234,20 @@ public class UavState {
     }
 
     /**
+     * @return the fuel
+     */
+    public double getFuel() {
+        return fuel;
+    }
+
+    /**
+     * @param fuel the fuel to set
+     */
+    public void setFuel(double fuel) {
+        this.fuel = fuel;
+    }
+
+    /**
      * @return the time
      */
     public double getTime() {
@@ -286,17 +262,31 @@ public class UavState {
     }
 
     /**
-     * @return the fuel
+     * @return the col
      */
-    public double getFuel() {
-        return fuel;
+    public int getCol() {
+        return col;
     }
 
     /**
-     * @param fuel the fuel to set
+     * @param col the col to set
      */
-    public void setFuel(double fuel) {
-        this.fuel = fuel;
+    public void setCol(int col) {
+        this.col = col;
+    }
+
+    /**
+     * @return the nfzs
+     */
+    public int getNfzs() {
+        return nfzs;
+    }
+
+    /**
+     * @param nfzs the nfzs to set
+     */
+    public void setNfzs(int nfzs) {
+        this.nfzs = nfzs;
     }
 
     /**
@@ -419,8 +409,10 @@ public class UavState {
                 this.height,
                 this.heading,
                 this.airSpeed,
-                this.fuel,                
+                this.fuel,
                 this.time,
+                this.col,
+                this.nfzs,                
                 this.xVa,
                 this.xHeading,
                 this.xHeight,

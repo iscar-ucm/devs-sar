@@ -45,9 +45,10 @@ public class EvInputs extends Atomic {
     private WindMatrix windMatrix;
     private ArrayList<Uav> scenarioUavs;
     private ArrayList<Target> scenarioTargets;
-    private CSVHandler csvHandler;    
+    private boolean fullPath;
+    private CSVHandler csvHandler;
 
-    public EvInputs(JSONObject jsonRoot, CSVHandler csvHandler) {
+    public EvInputs(JSONObject jsonRoot, boolean fullPath, CSVHandler csvHandler) {
         super("Inputs");
         super.addInPort(tiI1);
         super.addInPort(tiI2);
@@ -55,8 +56,8 @@ public class EvInputs extends Atomic {
         super.addOutPort(tiO2);
         super.addOutPort(tiO3);
         super.addOutPort(tiO4);
-        super.addOutPort(tiO5);    
-        
+        super.addOutPort(tiO5);
+
         JSONObject searchAreaJS = (JSONObject) jsonRoot.get("zone");
         searchArea = new SearchArea(searchAreaJS);
 
@@ -112,8 +113,9 @@ public class EvInputs extends Atomic {
             JSONObject iTargetJS = (JSONObject) targetsArray.get(i);
             scenarioTargets.add(new Target(iTargetJS, searchArea));
             // set full path
-            scenarioTargets.get(i).setFullPath(true);
+            scenarioTargets.get(i).setFullPath(fullPath);
         }
+        this.fullPath = fullPath;
         this.csvHandler = csvHandler;
     }
 
@@ -160,7 +162,7 @@ public class EvInputs extends Atomic {
             if (!tiI2.isEmpty()) {
                 scenarioTargets = tiI2.getSingleValue();
                 for (int i = 0; i < scenarioTargets.size(); ++i) {
-                    csvHandler.writeTarget(scenarioTargets.get(i));
+                    csvHandler.writeTarget(scenarioTargets.get(i), fullPath);
                 }
             }
         }

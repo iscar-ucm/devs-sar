@@ -22,9 +22,9 @@ public class ObjectiveComparator implements Comparator<Solution> {
 
         @Override
 	public int compare(Solution left, Solution right) {
-		if (left.getObjectives().get(obj) < right.getObjectives().get(obj)) {
+		if (left.getResults().get(obj) < right.getResults().get(obj)) {
 			return -1;
-		} else if (left.getObjectives().get(obj) > right.getObjectives().get(obj)) {
+		} else if (left.getResults().get(obj) > right.getResults().get(obj)) {
 			return 1;
 		} else {
 			return 0;

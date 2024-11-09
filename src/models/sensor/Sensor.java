@@ -18,6 +18,7 @@ import models.sensor.payloads.Ideal;
 import models.sensor.payloads.Footprint;
 import models.sensor.payloads.PayloadType;
 import models.sensor.payloads.Radar;
+import models.sensor.payloads.RadarSara;
 
 /**
  *
@@ -64,6 +65,9 @@ public class Sensor {
             case radar:
                 payload = new Radar(type, payloadJS, searchArea);
                 break;
+            case radarSara:
+                payload = new RadarSara(type, payloadJS, searchArea);
+                break;                
         }
         // read motion model
         JSONObject motionModelJS = (JSONObject) sensorJSON.get("motionModel");

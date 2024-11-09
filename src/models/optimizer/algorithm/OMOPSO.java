@@ -7,9 +7,9 @@ package models.optimizer.algorithm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.logging.Logger;
-import models.optimizer.CntrlParams;
 import models.optimizer.DecisionVar;
 import models.optimizer.DecisionVarType;
 import models.optimizer.Problem;
@@ -19,7 +19,6 @@ import models.optimizer.operator.assigner.FrontsExtractor;
 import models.optimizer.operator.Mutation;
 import models.optimizer.comparator.PropertyComparator;
 import models.optimizer.comparator.SolutionDominance;
-import static models.optimizer.operator.assigner.FrontsExtractor.propertyRank;
 import models.optimizer.operator.assigner.NicheCount;
 import models.sensor.Sensor;
 import models.sensor.SensorCntrlSignals;
@@ -61,9 +60,10 @@ public class OMOPSO extends Algorithm {
 
     // PSO auxilar data
     private Random rnd;
+    private HashSet<Integer> alreadyChosen;    
 
-    public OMOPSO(JSONObject algorithmJSON, CntrlParams cntrlParams) {
-        super(algorithmJSON, cntrlParams);
+    public OMOPSO(JSONObject algorithmJSON) {
+        super(algorithmJSON);
 
         // read Particle Swarm configuration parameters
         c1 = (double) algorithmJSON.get("c1");
@@ -76,7 +76,7 @@ public class OMOPSO extends Algorithm {
         for (int i = 0; i < mutationJS.size(); ++i) {
             mutationF[i] = (double) mutationJS.get(i);
         }
-        mutationOperator = new Mutation(mutationF, cntrlParams);
+        mutationOperator = new Mutation(mutationF);
     }
 
     /**
@@ -193,20 +193,21 @@ public class OMOPSO extends Algorithm {
      * This method generates the first set of random solutions. The number of
      * solutions to be generated it's configured by numSol field.
      *
-     * @param myProblem the current problem state.
+     * @param problems the current problem(s) state(s).
      * @return a ns ArrayList of Solution
      */
     @Override
-    public ArrayList<Solution> initialize(Problem myProblem) {
+    public ArrayList<Solution> initialize(ArrayList<Problem> problems) {
 
         // reset sequence data
         swarm = new ArrayList<>();
         leaders = new ArrayList<>();
-        dominance = new SolutionDominance();
         personalBests = new ArrayList<>();
+        dominance = new SolutionDominance();
         uavSpeeds = new ArrayList<>();
         sensorSpeeds = new ArrayList<>();
         rnd = new Random();
+        alreadyChosen = new HashSet<>();
         firstIteration = true;
 
         // create a new set of solutions from scratch
@@ -214,7 +215,15 @@ public class OMOPSO extends Algorithm {
 
         for (int i = 0; i < ns; ++i) {
 
-            Solution iSol = myProblem.newSolution();
+            // select randomly a scenario definition from the problem pool
+            int problemIdx = rnd.nextInt(problems.size());
+            if (alreadyChosen.contains(problemIdx) && alreadyChosen.size() < problems.size()) {
+                do {
+                    problemIdx = rnd.nextInt(problems.size());
+                } while (alreadyChosen.contains(problemIdx));
+            }
+            alreadyChosen.add(problemIdx);
+            Solution iSol = problems.get(problemIdx).newSolution();
 
             // for each uav in the solution
             for (int u = 0; u < iSol.getUavs().size(); ++u) {
@@ -258,7 +267,7 @@ public class OMOPSO extends Algorithm {
                 Solution particle = new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams);
+                        objectives);
                 swarm.add(particle);
                 int flag = dominance.compare(particle, personalBests.get(i));
                 if (flag < 0) // the new particle is better than the older one
@@ -266,7 +275,6 @@ public class OMOPSO extends Algorithm {
                     personalBests.set(i, particle.clone());
                 }
             }
-
             // Add particles to the external archive
             for (int i = 0; i < ns; i++) {
                 Solution particle = swarm.get(i);
@@ -280,7 +288,7 @@ public class OMOPSO extends Algorithm {
                 Solution newParticle = new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams);
+                        objectives);
                 swarm.add(newParticle);
                 leaders.add(newParticle.clone());
                 personalBests.add(newParticle.clone());
@@ -303,33 +311,98 @@ public class OMOPSO extends Algorithm {
         return newSwarm;
     }
 
+    @Override
+    public void tradeIn(ArrayList<Solution> solutions) {
+
+        // reduce the tradeInSolutions to fit to local ns
+        ArrayList<Solution> reducedTrade = new ArrayList<>();
+        if (solutions.size() < ns) {
+            reducedTrade = solutions;
+        } else {
+            reducedTrade = reduceTradeIn(solutions);
+        }
+
+        // Update personal bests
+        for (int i = 0; i < reducedTrade.size(); i++) {
+            int flag = dominance.compare(reducedTrade.get(i), personalBests.get(i));
+            if (flag < 0) // the new particle is better than the older one
+            {
+                personalBests.set(i, reducedTrade.get(i).clone());
+            }
+        }
+
+        // Add particles to the external archive
+        for (int i = 0; i < reducedTrade.size(); i++) {
+            Solution particle = reducedTrade.get(i);
+            leaders.add(particle.clone());
+        }
+        reduceExternalArchive();
+    }
+
+    private ArrayList<Solution> reduceTradeIn(ArrayList<Solution> pop) {
+
+        // sort current generation in fronts
+        FrontsExtractor extractor = new FrontsExtractor(dominance);
+        ArrayList<ArrayList<Solution>> fronts = extractor.execute(pop);
+
+        // combine all the fronts
+        ArrayList<Solution> reducedPop = new ArrayList<>();
+        ArrayList<Solution> front;
+        int i = 0;
+        while (reducedPop.size() < ns && i < fronts.size()) {
+            front = fronts.get(i);
+            if ((front.size() + reducedPop.size()) > ns) {
+                // add members of the current front until max size is reached
+                if (sortingMethod.startsWith("CROWDING_DISTANCE")) {
+                    CrowdingDistance assigner = new CrowdingDistance(front.get(0).getResults().size());
+                    assigner.execute(front);
+                    Collections.sort(front, new PropertyComparator(CrowdingDistance.propertyCrowdingDistance));
+                    for (int j = front.size() - 1; reducedPop.size() < ns; --j) {
+                        reducedPop.add(front.get(j));
+                    }
+
+                } else if (sortingMethod.startsWith("NICHE_COUNT")) {
+                    NicheCount assigner = new NicheCount(front.get(0).getResults().size());
+                    assigner.execute(front);
+                    Collections.sort(front, new PropertyComparator(NicheCount.propertyNicheCount));
+                    for (int j = 0; reducedPop.size() < ns; ++j) {
+                        reducedPop.add(front.get(j));
+                    }
+                }
+
+            } else {
+                // add all the members of the current front
+                reducedPop.addAll(front);
+            }
+            i++;
+        }
+        return reducedPop;
+    }
+
     private void reduceExternalArchive() {
 
         // reduce the external archive to the first front set of solutions
         FrontsExtractor extractor = new FrontsExtractor(dominance);
         extractor.reduceToNonDominated(leaders);
-        for (int i = 0; i < leaders.size(); ++i) {
-            leaders.get(i).getProperties().put(propertyRank, 1);
-        }
-
+        
         // apply sorting method to the first front
-        if (cntrlParams.getSortingMethod().indexOf("CROWDING_DISTANCE") == 0) {
-            CrowdingDistance assigner = new CrowdingDistance(leaders.get(0).getObjectives().size());
+        if (sortingMethod.startsWith("CROWDING_DISTANCE")) {
+            CrowdingDistance assigner = new CrowdingDistance(leaders.get(0).getResults().size());
             assigner.execute(leaders);
             Collections.sort(leaders, new PropertyComparator(CrowdingDistance.propertyCrowdingDistance));
 
-        } else if (cntrlParams.getSortingMethod().indexOf("NICHE_COUNT") == 0) {
-            NicheCount assigner = new NicheCount(leaders.get(0).getObjectives().size());
+        } else if (sortingMethod.startsWith("NICHE_COUNT")) {
+            NicheCount assigner = new NicheCount(leaders.get(0).getResults().size());
             assigner.execute(leaders);
             Collections.sort(leaders, new PropertyComparator(NicheCount.propertyNicheCount));
 
         } else {
-            LOGGER.severe("Sorting method not propertly defined: " + cntrlParams.getSortingMethod());
+            LOGGER.severe("Sorting method not propertly defined: " + sortingMethod);
         }
 
         // make sure the external archive does not exceed the required size
         while (leaders.size() > ns) {
-            if (cntrlParams.getSortingMethod().indexOf("CROWDING_DISTANCE") == 0) {
+            if (sortingMethod.startsWith("CROWDING_DISTANCE")) {
                 leaders.remove(0);
             } else // NICHE_COUNT or PARETO_SORT
             {
@@ -362,11 +435,11 @@ public class OMOPSO extends Algorithm {
                 // for each sensor in the uav
                 for (int s = 0; s < iuSensors.size(); ++s) {
 
-                    if (!iuSensors.get(s).isStatic()) {
+                    // init sensor speed
+                    ArrayList<SensorCntrlSignals> iusSensorSpeeds = new ArrayList<>();
+                    iuSensorSpeeds.add(iusSensorSpeeds);
 
-                        // init sensor speed
-                        ArrayList<SensorCntrlSignals> iusSensorSpeeds = new ArrayList<>();
-                        iuSensorSpeeds.add(iusSensorSpeeds);
+                    if (!iuSensors.get(s).isStatic()) {
 
                         for (int c = 0; c < iuSensors.get(s).getCntrlSignals().size(); c++) {
 
@@ -381,9 +454,7 @@ public class OMOPSO extends Algorithm {
                                 // check if the variable should be optimized or not
                                 if (decision[d].getType() != DecisionVarType.noaction) {
 
-                                    double newValue
-                                            = (Math.random() * decision[d].getRange())
-                                            + decision[d].getMinValue();
+                                    double newValue = decision[d].getRange() / 2.0;
 
                                     switch (decision[d].getName()) {
                                         case elevation:
@@ -434,9 +505,8 @@ public class OMOPSO extends Algorithm {
                         // check if the variable should be optimized or not
                         if (decision[d].getType() != DecisionVarType.noaction) {
 
-                            double newValue
-                                    = (Math.random() * decision[d].getRange())
-                                    + decision[d].getMinValue();
+                            double newValue = decision[d].getRange() / 2.0;
+
                             switch (decision[d].getName()) {
                                 case elevation:
                                     iucUavSpeeds.setcElevation(newValue);
@@ -469,16 +539,16 @@ public class OMOPSO extends Algorithm {
         // loop sensor cntrl signals
         for (int c = 0; c < particleCntrl.size(); ++c) {
 
-            double r1, r2, C1, C2, W;
+            double r1, r2;
             //Parameters for velocity equation
             r1 = rnd.nextDouble();
             r2 = rnd.nextDouble();
-            C1 = Math.min(1.5, getC1())
-                    + (Math.max(1.5, getC1()) - Math.min(1.5, getC1())) * rnd.nextDouble();
-            C2 = Math.min(1.5, getC1())
-                    + (Math.max(1.5, getC2()) - Math.min(1.5, getC2())) * rnd.nextDouble();
-            W = Math.min(0.1, getW())
-                    + (Math.max(0.1, getW()) - Math.min(0.1, getW())) * rnd.nextDouble();
+//            C1 = Math.min(1.5, getC1())
+//                    + (Math.max(1.5, getC1()) - Math.min(1.5, getC1())) * rnd.nextDouble();
+//            C2 = Math.min(1.5, getC1())
+//                    + (Math.max(1.5, getC2()) - Math.min(1.5, getC2())) * rnd.nextDouble();
+//            W = Math.min(0.1, getW())
+//                    + (Math.max(0.1, getW()) - Math.min(0.1, getW())) * rnd.nextDouble();
 
             // for each decision variable
             for (int d = 0; d < decision.length; ++d) {
@@ -486,27 +556,46 @@ public class OMOPSO extends Algorithm {
                 // check if the variable should be optimized or not
                 if (decision[d].getType() != DecisionVarType.noaction) {
 
-                    double vPart, pBest, gBest, pSpeed;
+                    double vPart, pBest, gBest, newSpeed;
 
                     switch (decision[d].getName()) {
                         case elevation:
                             vPart = particleCntrl.get(c).getcElevation();
                             pBest = personalBestCntrl.get(c).getcElevation();
                             gBest = globalBestCntrl.get(c).getcElevation();
-                            pSpeed = W * sensorSpeeds.get(i).get(u).get(s).get(c).getcElevation()
-                                    + C1 * r1 * (pBest - vPart)
-                                    + C2 * r2 * (gBest - vPart);
-                            sensorSpeeds.get(i).get(u).get(s).get(c).setcElevation(pSpeed);
+                            newSpeed = w * sensorSpeeds.get(i).get(u).get(s).get(c).getcElevation()
+                                    + c1 * r1 * (pBest - vPart)
+                                    + c2 * r2 * (gBest - vPart);
+                            // make sure cntrl signal is in range
+                            if (newSpeed > decision[d].getMaxValue()) {
+                                newSpeed = decision[d].getMaxValue();
+                            } else if (newSpeed < decision[d].getMinValue()) {
+                                newSpeed = decision[d].getMinValue();
+                            }
+                            sensorSpeeds.get(i).get(u).get(s).get(c).setcElevation(newSpeed);
                             break;
 
                         case azimuth:
                             vPart = particleCntrl.get(c).getcAzimuth();
                             pBest = personalBestCntrl.get(c).getcAzimuth();
                             gBest = globalBestCntrl.get(c).getcAzimuth();
-                            pSpeed = W * sensorSpeeds.get(i).get(u).get(s).get(c).getcAzimuth()
-                                    + C1 * r1 * (pBest - vPart)
-                                    + C2 * r2 * (gBest - vPart);
-                            sensorSpeeds.get(i).get(u).get(s).get(c).setcAzimuth(pSpeed);
+                            newSpeed = w * sensorSpeeds.get(i).get(u).get(s).get(c).getcAzimuth()
+                                    + c1 * r1 * (pBest - vPart)
+                                    + c2 * r2 * (gBest - vPart);
+                            // make sure cntrl signal is in range
+                            if (Math.abs(newSpeed) > 180) {
+                                if (newSpeed > 180) {
+                                    newSpeed -= 360;
+                                } else {
+                                    newSpeed += 360;
+                                }
+                            }
+                            if (newSpeed > decision[d].getMaxValue()) {
+                                newSpeed = decision[d].getMaxValue();
+                            } else if (newSpeed < decision[d].getMinValue()) {
+                                newSpeed = decision[d].getMinValue();
+                            }
+                            sensorSpeeds.get(i).get(u).get(s).get(c).setcAzimuth(newSpeed);
                             break;
                     }
                 }
@@ -526,16 +615,16 @@ public class OMOPSO extends Algorithm {
         // loop uav cntrlSignals
         for (int c = 0; c < particleCntrl.size(); ++c) {
 
-            double r1, r2, C1, C2, W;
+            double r1, r2;
             //Parameters for velocity equation
             r1 = rnd.nextDouble();
             r2 = rnd.nextDouble();
-            C1 = Math.min(1.5, getC1())
-                    + (Math.max(1.5, getC1()) - Math.min(1.5, getC1())) * rnd.nextDouble();
-            C2 = Math.min(1.5, getC1())
-                    + (Math.max(1.5, getC2()) - Math.min(1.5, getC2())) * rnd.nextDouble();
-            W = Math.min(0.1, getW())
-                    + (Math.max(0.1, getW()) - Math.min(0.1, getW())) * rnd.nextDouble();
+//            C1 = Math.min(1.5, getC1())
+//                    + (Math.max(1.5, getC1()) - Math.min(1.5, getC1())) * rnd.nextDouble();
+//            C2 = Math.min(1.5, getC1())
+//                    + (Math.max(1.5, getC2()) - Math.min(1.5, getC2())) * rnd.nextDouble();
+//            W = Math.min(0.1, getW())
+//                    + (Math.max(0.1, getW()) - Math.min(0.1, getW())) * rnd.nextDouble();
 
             // for each decision variable
             for (int d = 0; d < decision.length; ++d) {
@@ -550,9 +639,15 @@ public class OMOPSO extends Algorithm {
                             vPart = particleCntrl.get(c).getcElevation();
                             pBest = personalBestCntrl.get(c).getcElevation();
                             gBest = globalBestCntrl.get(c).getcElevation();
-                            newSpeed = W * uavSpeeds.get(i).get(u).get(c).getcElevation()
-                                    + C1 * r1 * (pBest - vPart)
-                                    + C2 * r2 * (gBest - vPart);
+                            newSpeed = w * uavSpeeds.get(i).get(u).get(c).getcElevation()
+                                    + c1 * r1 * (pBest - vPart)
+                                    + c2 * r2 * (gBest - vPart);
+                            // make sure cntrl signal is in range
+                            if (newSpeed > decision[d].getMaxValue()) {
+                                newSpeed = decision[d].getMaxValue();
+                            } else if (newSpeed < decision[d].getMinValue()) {
+                                newSpeed = decision[d].getMinValue();
+                            }
                             uavSpeeds.get(i).get(u).get(c).setcElevation(newSpeed);
                             break;
 
@@ -560,9 +655,15 @@ public class OMOPSO extends Algorithm {
                             vPart = particleCntrl.get(c).getcSpeed();
                             pBest = personalBestCntrl.get(c).getcSpeed();
                             gBest = globalBestCntrl.get(c).getcSpeed();
-                            newSpeed = W * uavSpeeds.get(i).get(u).get(c).getcSpeed()
-                                    + C1 * r1 * (pBest - vPart)
-                                    + C2 * r2 * (gBest - vPart);
+                            newSpeed = w * uavSpeeds.get(i).get(u).get(c).getcSpeed()
+                                    + c1 * r1 * (pBest - vPart)
+                                    + c2 * r2 * (gBest - vPart);
+                            // make sure cntrl signal is in range
+                            if (newSpeed > decision[d].getMaxValue()) {
+                                newSpeed = decision[d].getMaxValue();
+                            } else if (newSpeed < decision[d].getMinValue()) {
+                                newSpeed = decision[d].getMinValue();
+                            }
                             uavSpeeds.get(i).get(u).get(c).setcSpeed(newSpeed);
                             break;
 
@@ -570,9 +671,22 @@ public class OMOPSO extends Algorithm {
                             vPart = particleCntrl.get(c).getcHeading();
                             pBest = personalBestCntrl.get(c).getcHeading();
                             gBest = globalBestCntrl.get(c).getcHeading();
-                            newSpeed = W * uavSpeeds.get(i).get(u).get(c).getcHeading()
-                                    + C1 * r1 * (pBest - vPart)
-                                    + C2 * r2 * (gBest - vPart);
+                            newSpeed = w * uavSpeeds.get(i).get(u).get(c).getcHeading()
+                                    + c1 * r1 * (pBest - vPart)
+                                    + c2 * r2 * (gBest - vPart);
+                            // make sure cntrl signal is in range
+                            if (Math.abs(newSpeed) > 180) {
+                                if (newSpeed > 180) {
+                                    newSpeed -= 360;
+                                } else {
+                                    newSpeed += 360;
+                                }
+                            }
+                            if (newSpeed > decision[d].getMaxValue()) {
+                                newSpeed = decision[d].getMaxValue();
+                            } else if (newSpeed < decision[d].getMinValue()) {
+                                newSpeed = decision[d].getMinValue();
+                            }
                             uavSpeeds.get(i).get(u).get(c).setcHeading(newSpeed);
                             break;
                     }
@@ -595,7 +709,7 @@ public class OMOPSO extends Algorithm {
 
     private void computeSpeed() {
 
-        CrowdingDistance assigner = new CrowdingDistance(leaders.get(0).getObjectives().size());
+        CrowdingDistance assigner = new CrowdingDistance(leaders.get(0).getResults().size());
         assigner.execute(leaders);
 
         Solution particle, personalBest, globalBest, one, two;
@@ -677,12 +791,11 @@ public class OMOPSO extends Algorithm {
                                 } else {
                                     newValue += 360;
                                 }
-                            } else {
-                                if (newValue > decision[d].getMaxValue()) {
-                                    newValue = decision[d].getMaxValue();
-                                } else if (newValue < decision[d].getMinValue()) {
-                                    newValue = decision[d].getMinValue();
-                                }
+                            }
+                            if (newValue > decision[d].getMaxValue()) {
+                                newValue = decision[d].getMaxValue();
+                            } else if (newValue < decision[d].getMinValue()) {
+                                newValue = decision[d].getMinValue();
                             }
                             cntrlSignal.setcAzimuth(newValue);
                             break;
@@ -747,12 +860,11 @@ public class OMOPSO extends Algorithm {
                             } else {
                                 newValue += 360;
                             }
-                        } else {
-                            if (newValue > decision[d].getMaxValue()) {
-                                newValue = decision[d].getMaxValue();
-                            } else if (newValue < decision[d].getMinValue()) {
-                                newValue = decision[d].getMinValue();
-                            }
+                        }
+                        if (newValue > decision[d].getMaxValue()) {
+                            newValue = decision[d].getMaxValue();
+                        } else if (newValue < decision[d].getMinValue()) {
+                            newValue = decision[d].getMinValue();
                         }
 
                         cntrlSignal.setcHeading(newValue);
@@ -784,10 +896,8 @@ public class OMOPSO extends Algorithm {
 
             // loop each particle-uav
             for (int u = 0; u < newParticle.getUavs().size(); u++) {
-                Uav newParticleUav = newParticle.getUavs().get(u);
-
                 // compute the new position
-                computeUavNewPosition(i, u, newParticleUav);
+                computeUavNewPosition(i, u, newParticle.getUavs().get(u));
             }
             newSwarm.add(newParticle);
         }

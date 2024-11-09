@@ -25,8 +25,8 @@ import utils.CSVHandler;
  * @author bordon
  */
 public class EvInputs extends Atomic {
-    
-    private static final Logger LOGGER = Logger.getLogger(EvInputs.class.getName());    
+
+    private static final Logger LOGGER = Logger.getLogger(EvInputs.class.getName());
 
     // in Ports of the model
     public ArrayList<Port> tiI1 = new ArrayList<>(); // evaluated iUav
@@ -46,14 +46,15 @@ public class EvInputs extends Atomic {
     private ArrayList<Uav> scenarioUavs;
     private ArrayList<Target> scenarioTargets;
     private int eUavsRcvd, eTgtsRcvd;
+    private boolean fullPath;
     private CSVHandler csvHandler;
 
-    public EvInputs(JSONObject jsonRoot, CSVHandler csvHandler) {
-        super("Inputs"); 
+    public EvInputs(JSONObject jsonRoot, boolean fullPath, CSVHandler csvHandler) {
+        super("Inputs");
         super.addOutPort(tiO1);
         super.addOutPort(tiO2);
-        super.addOutPort(tiO3);    
-        
+        super.addOutPort(tiO3);
+
         JSONObject searchAreaJS = (JSONObject) jsonRoot.get("zone");
         searchArea = new SearchArea(searchAreaJS);
 
@@ -126,8 +127,9 @@ public class EvInputs extends Atomic {
             JSONObject iTargetJS = (JSONObject) targetsArray.get(i);
             scenarioTargets.add(new Target(iTargetJS, searchArea));
             // set full path
-            scenarioTargets.get(i).setFullPath(true);
+            scenarioTargets.get(i).setFullPath(fullPath);
         }
+        this.fullPath = fullPath;
         this.csvHandler = csvHandler;
     }
 
@@ -154,7 +156,7 @@ public class EvInputs extends Atomic {
                             "%1$s: EVALUTION STARTS",
                             this.getName()
                     )
-            );              
+            );
             super.holdIn("waiting", Double.MAX_VALUE);
         }
     }
@@ -168,7 +170,7 @@ public class EvInputs extends Atomic {
                             "%1$s: EVALUTION ENDS, WRITING DATA",
                             this.getName()
                     )
-            );            
+            );
             for (int i = 0; i < tiI1.size(); ++i) {
                 if (!tiI1.get(i).isEmpty()) {
                     ++eUavsRcvd;
@@ -180,7 +182,7 @@ public class EvInputs extends Atomic {
                 if (!tiI2.get(i).isEmpty()) {
                     ++eTgtsRcvd;
                     scenarioTargets.set(i, (Target) tiI2.get(i).getSingleValue());
-                    csvHandler.writeTarget(scenarioTargets.get(i));
+                    csvHandler.writeTarget(scenarioTargets.get(i), fullPath);
                 }
             }
         }

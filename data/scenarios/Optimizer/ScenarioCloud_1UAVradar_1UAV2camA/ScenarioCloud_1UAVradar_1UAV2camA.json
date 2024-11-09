@@ -273,15 +273,17 @@
             "time": 3600.0,
             "pd": 1.0
         },
-        "exchangeIteration": 0,        
-        "logIterations": false,
-        "constraints": ["nfz", "collision"],
-        "paretos": ["heurist", "etd", "pd"],
-        "sortingMethod": "CROWDING_DISTANCE"
+        "logIterations": true
     },
     "algorithms": [
         {
             "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
+            "sortingMethod": "CROWDING_DISTANCE",                
             "selection": {
                 "method": "binaryTournament"
             },
@@ -290,7 +292,11 @@
                 "method": "singlePoint"
             },
             "mutation": [0.1, 0.01],
-            "ns": 50
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
         }
     ]
 }

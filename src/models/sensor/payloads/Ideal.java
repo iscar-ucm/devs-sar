@@ -62,9 +62,9 @@ public class Ideal extends Payload {
 
         // calculate in which searchArea cells is the uav
         int uavXCell
-                = (int) Math.floor(uavState.getY() / sensorLikelihood.getxScale());
+                = (int) Math.floor(uavState.getY() / sensorLikelihood.getyScale());
         int uavYCell
-                = (int) Math.floor(uavState.getX() / sensorLikelihood.getyScale());
+                = (int) Math.floor(uavState.getX() / sensorLikelihood.getxScale());
 
         // apply detection probability to sensor matrix       
         if (uavXCell >= 0 && uavXCell < sensorLikelihood.getxCells()

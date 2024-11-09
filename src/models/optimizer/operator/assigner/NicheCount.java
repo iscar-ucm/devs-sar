@@ -49,8 +49,8 @@ public class NicheCount {
         for (int i = 0; i < numberOfObjectives; ++i) {
             // Sort the population by objective i
             Collections.sort(solutions, new ObjectiveComparator(i));
-            minObjective = solutions.get(0).getObjectives().get(i);
-            maxObjective = solutions.get(size - 1).getObjectives().get(i);
+            minObjective = solutions.get(0).getResults().get(i);
+            maxObjective = solutions.get(size - 1).getResults().get(i);
             sigmaShare += (maxObjective - minObjective);
         }
         sigmaShare /= (size - 1);
@@ -65,7 +65,7 @@ public class NicheCount {
                 Solution solJ = solutions.get(j);
                 distanceIJ = 0;
                 for (int m = 0; m < numberOfObjectives; ++m) {
-                    distanceIJ += Math.pow(solI.getObjectives().get(m) - solJ.getObjectives().get(m), 2);
+                    distanceIJ += Math.pow(solI.getResults().get(m) - solJ.getResults().get(m), 2);
                 }
                 distanceIJ = Math.sqrt(distanceIJ);
                 if (distanceIJ < sigmaShare) {

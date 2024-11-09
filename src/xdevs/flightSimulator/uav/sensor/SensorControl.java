@@ -23,7 +23,7 @@ public class SensorControl extends Atomic {
     private static final Logger LOGGER = Logger.getLogger(SensorControl.class.getName());
 
     // in Ports of the model
-    public Port<Sensor> scI1 = new Port<>("sensor");   
+    public Port<Sensor> scI1 = new Port<>("sensor");
     public Port<SensorState> scI2 = new Port<>("newSensorState");
 
     // out Ports of the model
@@ -44,7 +44,7 @@ public class SensorControl extends Atomic {
         super(coupledName + " SC" + index);
         // Ports of the Atomic model
         super.addInPort(scI1);
-        super.addInPort(scI2);        
+        super.addInPort(scI2);
         super.addOutPort(scO1);
         super.addOutPort(scO2);
         super.addOutPort(scO3);
@@ -70,7 +70,7 @@ public class SensorControl extends Atomic {
         mySensorState = null;
         currentIdx = 0;
         clock = 0.0;
-        scenarioTime = 0.0;       
+        scenarioTime = 0.0;
         super.passivate();
     }
 
@@ -84,7 +84,7 @@ public class SensorControl extends Atomic {
             } else {
                 // cntrlSignals are empty so wait until uav endTime
                 clock = mySensor.getSeqEndTime();
-                super.holdIn("waiting", clock);                
+                super.holdIn("waiting", clock);
             }
 
         } else if (phaseIs("control")) {
@@ -139,8 +139,8 @@ public class SensorControl extends Atomic {
     public void deltcon() {
         deltext(0);
         deltint();
-    }    
-    
+    }
+
     @Override
     public void lambda() {
 

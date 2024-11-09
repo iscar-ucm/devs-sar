@@ -17,11 +17,14 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import models.optimizer.Objectives;
 import models.optimizer.Solution;
 import models.sensor.Sensor;
 import models.sensor.SensorCntrlSignals;
@@ -47,10 +50,11 @@ public class CSVHandler {
     private final String writePath;
     private String optimizerPath;
     private String runPath;
+    private String solPath;
     private String uavsPath;
     private String targetsPath;
-    private List<String[]> iterationsData;
-    private List<String[]> runsData;
+    private List<String[]> iterationsData; // each iteration firstFront
+    private List<String[]> runsData; // run firstFront
 
     public CSVHandler(String devsSpec, String tool, String scenarioName) {
         // set path to load files
@@ -79,9 +83,7 @@ public class CSVHandler {
         } else {
             // init data
             iterationsData = new ArrayList<>();
-            runsData = new ArrayList<>();
-            // first row with the names of the fields
-            runsData.add(new String[]{"run", "sol", "dp", "etd", "heurist", "smoothness", "nfzs", "collisions"});
+            runsData = new ArrayList<>();           
         }
     }
 
@@ -118,23 +120,22 @@ public class CSVHandler {
         // optimizer file
         String runsFilePath = this.optimizerPath + "runs.csv";
         File runsFile = new File(runsFilePath);
-
+        
         try {
             // create FileWriter object with file as parameter 
-            FileWriter outputfile = new FileWriter(runsFile);
+            FileWriter outputfile = new FileWriter(runsFile);          
 
             // create CSVWriter object filewriter object as parameter 
-            CSVWriter writer = new CSVWriter(outputfile);
+            CSVWriter writer = new CSVWriter(outputfile);            
 
             // wite the data to the writer
-            writer.writeAll(runsData);
+            writer.writeAll(runsData);           
 
             // closing writer connection 
-            writer.close();
+            writer.close();          
 
             // reset runsData for next optimizer            
-            runsData = new ArrayList<>();
-            runsData.add(new String[]{"run", "sol", "dp", "etd", "heurist", "smoothness", "nfzs", "collisions"});
+            runsData = new ArrayList<>();         
 
         } catch (IOException e) {
             // Auto-generated catch block 
@@ -142,8 +143,13 @@ public class CSVHandler {
         }
     }
 
-    public void writeRun(int run, Solution runSolution) {
-        // folders creation
+    public void writeRun(
+            int run,
+            double eTime,
+            Objectives objectives,
+            ArrayList<Solution> runSolutions) {
+
+        // run folder creation
         if (run < 10) {
             runPath = optimizerPath + '0' + run + File.separator;
         } else {
@@ -152,62 +158,103 @@ public class CSVHandler {
         File runFolder = new File(runPath);
         runFolder.mkdir();
 
-        Solution currentSol = runSolution.clone();
-
-        uavsPath = runPath + "uavs" + File.separator;
-        File uavsFolder = new File(uavsPath);
-        uavsFolder.mkdir();
-
-        // write uavs results
-        currentSol.getUavs().forEach(solUav -> {
-            writeUavCntrl(solUav);
-        });
-
-        // write target results
-        currentSol.getTgts().forEach(solTgt -> {
-            // writeTarget(solTgt);
-            // write current run objectives into optimizer file
-            // AHORA MISMO SOLO SUPONEMOS UN TARGET
-            String[] row = new String[8];
-            row[0] = String.valueOf(run);
-            row[1] = currentSol.getId().toString();
-            row[2] = String.valueOf(solTgt.getDp());
-            row[3] = String.valueOf(solTgt.getEtd());
-            row[4] = String.valueOf(solTgt.getHeuristic());
-            // go through uavs
-            int totalNFZs = 0;
-            int totalCollisions = 0;
-            double totalSmoothness = 0.0;
-            for (int u = 0; u < currentSol.getUavs().size(); ++u) {
-                totalNFZs += currentSol.getUavs().get(u).getTotalNFZs();
-                totalCollisions += currentSol.getUavs().get(u).getTotalCollisions();
-                totalSmoothness += currentSol.getUavs().get(u).getSmoothValue();
+        // for each solution
+        int iSol = 1;
+        for (short i = 0; i < runSolutions.size(); ++i) {
+            Solution currentSol = runSolutions.get(i);
+            // folders creation
+            if (iSol < 10) {
+                solPath = runPath + '0' + iSol + File.separator;
+            } else {
+                solPath = runPath + iSol + File.separator;
             }
-            row[5] = String.valueOf(totalSmoothness);
-            row[5] = String.valueOf(totalNFZs);
-            row[6] = String.valueOf(totalCollisions);
-            runsData.add(row);
-        });
 
-        // write current run iterations file
-        String iterationsCsvPath = runPath + "iterations.csv";
-        File iterationsFile = new File(iterationsCsvPath);
+            File solFolder = new File(solPath);
+            solFolder.mkdir();
+
+            uavsPath = solPath + "uavs" + File.separator;
+            File uavsFolder = new File(uavsPath);
+            uavsFolder.mkdir();
+
+            // write uavs results
+            currentSol.getUavs().forEach(solUav -> {
+                writeUavCntrl(solUav);
+            });
+
+            // run log fields
+            int fixFields = 3;
+            int numFields = fixFields
+                    + objectives.getConstraints().length
+                    + objectives.getParetos().length;
+
+            if (runsData.isEmpty()) {
+                // first row with the names of the fields
+                String[] firstRow = new String[numFields];
+                firstRow[0] = "run";
+                firstRow[1] = "sol";
+                firstRow[2] = "time";
+                // names of the paretos
+                int p;
+                for (p = 0; p < objectives.getParetos().length; ++p) {
+                    firstRow[fixFields + p] = objectives.getParetos()[p].toString();
+                }
+                // names of the constraints
+                for (int c = 0; c < objectives.getConstraints().length; ++c) {
+                    firstRow[fixFields + p + c] = objectives.getConstraints()[c].toString();
+                }
+                runsData.add(firstRow);                
+            }
+
+            // fix fields
+            String[] row = new String[numFields];
+            row[0] = String.valueOf(run);
+            row[1] = String.valueOf(iSol);
+            BigDecimal roundedTime = new BigDecimal(eTime);
+            roundedTime = roundedTime.setScale(2, RoundingMode.HALF_UP);
+            row[2] = String.valueOf(roundedTime);
+            // paretos values
+            int p = 0;
+            for (p = 0; p < objectives.getParetos().length; ++p) {
+                if ("pd".equals(objectives.getParetos()[p].toString())) {
+                    BigDecimal n1 = new BigDecimal("1.0");
+                    BigDecimal nDP = BigDecimal.valueOf(currentSol.getParetos().get(0, p));
+                    BigDecimal pd = n1.subtract(nDP);
+                    row[fixFields + p]
+                            = String.valueOf(pd);
+                } else {
+                    row[fixFields + p]
+                            = String.valueOf(currentSol.getParetos().get(0, p));
+                }
+            }
+            // constraints values
+            for (int c = 0; c < currentSol.getConstraints().numCols; ++c) {
+                row[fixFields + p + c]
+                        = String.valueOf(currentSol.getConstraints().get(0, c));
+            }
+            // add the iteration row
+            runsData.add(row);
+            iSol++;
+        }
+
+        // write current run iterations files
+        String iterationsCsvPath = runPath + "iterations.csv";   
+        File iterationsFile = new File(iterationsCsvPath);       
 
         try {
             // create FileWriter object with file as parameter 
-            FileWriter outputfile = new FileWriter(iterationsFile);
+            FileWriter outputfile = new FileWriter(iterationsFile);            
 
             // create CSVWriter object filewriter object as parameter 
-            CSVWriter writer = new CSVWriter(outputfile);
+            CSVWriter writer = new CSVWriter(outputfile);          
 
             // wite the data to the writer
             writer.writeAll(iterationsData);
-
+            
             // closing writer connection 
             writer.close();
-
+            
             // reset iterationsData for next run
-            iterationsData = new ArrayList<>();
+            iterationsData = new ArrayList<>();           
 
         } catch (IOException e) {
             // Auto-generated catch block 
@@ -215,47 +262,76 @@ public class CSVHandler {
         }
     }
 
-    public void writeIteration(
+    public void writeFirstFront(
             int sequence,
             int iteration,
+            double eTime,
+            Objectives objectives,
             ArrayList<Solution> firstFront) {
 
+        // iteration log fields
+        int fixFields = 4;
+        int numFields = fixFields
+                + objectives.getConstraints().length
+                + objectives.getParetos().length;
+
         if (iterationsData.isEmpty()) {
+
             // first row with the names of the fields
-            iterationsData.add(new String[]{"seq", "iteration", "sol", "dp", "etd", "heurist", "smoothess", "nfzs", "collisions"});
-        }
+            String[] firstRow = new String[numFields];
+            firstRow[0] = "seq";
+            firstRow[1] = "iteration";
+            firstRow[2] = "sol";
+            firstRow[3] = "time";
+            // names of the paretos
+            int p;
+            for (p = 0; p < objectives.getParetos().length; ++p) {
+                firstRow[fixFields + p] = objectives.getParetos()[p].toString();
+            }
+            // names of the constraints
+            for (int c = 0; c < objectives.getConstraints().length; ++c) {
+                firstRow[fixFields + p + c] = objectives.getConstraints()[c].toString();
+            }
+            iterationsData.add(firstRow);
+        }     
+        
+        final int[] frontPos = {1};
+        firstFront.forEach(iSol -> {
 
-        for (int i = 0; i < firstFront.size(); ++i) {
-
-            Solution iSol = firstFront.get(i);
-
-            // AHORA MISMO SOLO SUPONEMOS UN TARGET
-            String[] row = new String[9];
+            String[] row = new String[numFields];
+            // fix fields
             row[0] = String.valueOf(sequence);
             row[1] = String.valueOf(iteration);
-            row[2] = String.valueOf(i);
-            row[3] = String.valueOf(iSol.getTgts().get(0).getDp());
-            row[4] = String.valueOf(iSol.getTgts().get(0).getEtd());
-            row[5] = String.valueOf(iSol.getTgts().get(0).getHeuristic());
-
-            // go through uavs
-            int totalNFZs = 0;
-            int totalCollisions = 0;
-            double totalSmoothness = 0.0;
-            for (int u = 0; u < iSol.getUavs().size(); ++u) {
-                totalNFZs += iSol.getUavs().get(u).getTotalNFZs();
-                totalCollisions += iSol.getUavs().get(u).getTotalCollisions();
-                totalSmoothness += iSol.getUavs().get(u).getSmoothValue();
+            row[2] = String.valueOf(frontPos[0]);
+            BigDecimal roundedTime = new BigDecimal(eTime);
+            roundedTime = roundedTime.setScale(2, RoundingMode.HALF_UP);
+            row[3] = String.valueOf(roundedTime);
+            // paretos values
+            int p = 0;
+            for (p = 0; p < objectives.getParetos().length; ++p) {
+                if ("pd".equals(objectives.getParetos()[p].toString())) {
+                    BigDecimal n1 = new BigDecimal("1.0");
+                    BigDecimal nDP = BigDecimal.valueOf(iSol.getParetos().get(0, p));
+                    BigDecimal pd = n1.subtract(nDP);
+                    row[fixFields + p]
+                            = String.valueOf(pd);
+                } else {
+                    row[fixFields + p]
+                            = String.valueOf(iSol.getParetos().get(0, p));
+                }
             }
-            row[6] = String.valueOf(totalSmoothness);
-            row[7] = String.valueOf(totalNFZs);
-            row[8] = String.valueOf(totalCollisions);
-
+            // constraints values
+            for (int c = 0; c < iSol.getConstraints().numCols; ++c) {
+                row[fixFields + p + c]
+                        = String.valueOf(iSol.getConstraints().get(0, c));
+            }
+            // add the iteration row
             iterationsData.add(row);
-        }
+            frontPos[0]++;
+        });       
     }
 
-    public void writeTarget(Target target) {
+    public void writeTarget(Target target, boolean fullPath) {
 
         // target folder & file creation  	
         String targetFolderPath = targetsPath + target.getName() + File.separator;
@@ -291,11 +367,14 @@ public class CSVHandler {
 
             // first row with the names of the fields
             data.add(new String[]{"dp", "etd", "time"});
+            //data.add(new String[]{"dp", "etd", "miss", "time"});
 
-            // variables used to calculate etd, dp & heurist
-            double dp, elapsedTime;
+            // variables used to calculate etd, pd & myo
+            double pd, elapsedTime;
             double prevTime = target.getPath().get(0).getTime();
-            double probLost = 0.0;
+            double missPd = 0.0;
+            double prevProb = 1.0;
+            double newProb;
             double etd = 0.0;
 
             // go through target path
@@ -303,29 +382,36 @@ public class CSVHandler {
 
                 TargetState iState = target.getPath().get(i);
 
-                // save ibelief into csv file
-                MatrixIO.saveDenseCSV(
-                        iState.getBelief(),
-                        targetFolderPath
-                        + target.getName() + "State" + i + ".csv"
-                );
-
-                String[] row = new String[3];
-
-                // probability lost accumulation
-                probLost += iState.getMissPd();
-                // dp calculation
-                dp = 1.0 - CommonOps_DDRM.elementSum(iState.getBelief()) - probLost;
-                // etd calculation
-                if (!iState.isPrediction()) {
-                    elapsedTime = iState.getTime() - prevTime;
-                    prevTime = iState.getTime();
-                    etd += (CommonOps_DDRM.elementSum(iState.getBelief()) + probLost) * elapsedTime;
+                if (fullPath || i == 0 || i == 1) {
+                    // save ibelief into csv file
+                    MatrixIO.saveDenseCSV(
+                            iState.getBelief(),
+                            targetFolderPath
+                            + target.getName() + "State" + i + ".csv"
+                    );
                 }
 
+                String[] row = new String[3];
+                //String[] row = new String[4];
+
+                // probability map sum
+                newProb = CommonOps_DDRM.elementSum(iState.getBelief());
+                if (!iState.isPrediction()) {
+                    // etd calculation
+                    elapsedTime = iState.getTime() - prevTime;
+                    prevTime = iState.getTime();
+                    etd += (CommonOps_DDRM.elementSum(iState.getBelief()) + missPd) * elapsedTime;
+                } else {
+                    missPd += Math.max(prevProb - newProb, 0.0);
+                }
+                // pd calculation
+                pd = 1.0 - newProb - missPd;
+                prevProb = newProb;
+
                 //add the row to the data                
-                row[0] = String.valueOf(dp);
+                row[0] = String.valueOf(pd);
                 row[1] = String.valueOf(etd);
+                //row[2] = String.valueOf(missPd);   
                 row[2] = String.valueOf(iState.getTime());
                 data.add(row);
             }
@@ -401,7 +487,7 @@ public class CSVHandler {
 
             // first row with the names of the fields
             data1.add(new String[]{"x", "y", "z", "heading", "airspeed", "fuel", "time"});
-            data2.add(new String[]{"nfzs", "collisions", "fuelEmpties"});
+            data2.add(new String[]{"nfzs", "collisions"});
 
             // go through uav path
             for (int i = 0; i < uav.getPath().size(); ++i) {
@@ -421,9 +507,8 @@ public class CSVHandler {
 
             // uav data
             data2.add(new String[]{
-                String.valueOf(uav.getTotalNFZs()),
-                String.valueOf(uav.getTotalCollisions()),
-                String.valueOf(uav.getTotalFuelEmpties())
+                String.valueOf(uav.getNFZs()),
+                String.valueOf(uav.getCol())
             });
 
             // wite the data to the writer

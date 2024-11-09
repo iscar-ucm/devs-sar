@@ -1,0 +1,336 @@
+{
+    "benchmark": "1UAV camera, 1target dynamic (2 gaussians)",
+    "zone": {    
+        "latitude": 36.8687866974819,
+        "longitude": -2.7917287909395,
+        "xWidth": 20000.0,
+        "yHeight": 20000.0,
+        "areaBearing": 0.0,
+        "xCells": 20,
+        "yCells": 20
+    },
+    "nfzs": [
+        {
+            "xRow": 12,
+            "yCol": 0
+        },
+        {
+            "xRow": 12,
+            "yCol": 1
+        },
+        {
+            "xRow": 12,
+            "yCol": 2
+        },
+        {
+            "xRow": 13,
+            "yCol": 0
+        },
+        {
+            "xRow": 13,
+            "yCol": 1
+        },
+        {
+            "xRow": 13,
+            "yCol": 2
+        },
+        {
+            "xRow": 0,
+            "yCol": 5
+        },
+        {
+            "xRow": 0,
+            "yCol": 6
+        },
+        {
+            "xRow": 1,
+            "yCol": 5
+        },
+        {
+            "xRow": 1,
+            "yCol": 6
+        },
+        {
+            "xRow": 2,
+            "yCol": 5
+        },
+        {
+            "xRow": 2,
+            "yCol": 6
+        }
+    ],
+    "windMatrix": {
+        "xCells": 1,
+        "yCells": 1,
+        "xScale": 20000.0,
+        "yScale": 20000.0,
+        "winds": 
+                [
+                    [
+                        {
+                            "speed": 0.0,
+                            "angle": 0.0,
+                            "time": 0.0
+                        }
+                    ]
+                ]
+    },   
+    "targets": [
+        {
+            "name": "target1",
+            "motionModel": 
+                    {
+                        "type": "homogeneous",
+                        "nonEscape": true,
+                        "at": 175.0,
+                        "points": [
+                            {
+                                "xCell": 0,
+                                "yCell": 0,
+                                "actions": [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+                            }                       
+                        ]
+                    },
+            "initState": {
+                "function": "gaussian",
+                "gaussians": [ 
+                    {
+                        "mu": [5, 10],
+                        "cov": [
+                            [1.0, 0.0],
+                            [0.0, 1.0]
+                        ],
+                        "weight": 0.5
+                    },
+                    {
+                        "mu": [17, 4],
+                        "cov": [
+                            [1.0, 0.0],
+                            [0.0, 1.0]
+                        ],
+                        "weight": 0.5
+                    }   
+                ],
+                "time": 0.0
+            },
+            "endTime": 500.0
+        }
+    ],
+    "uavs": [
+        {
+            "name": "uav_1", 
+            "type": "typeA",
+            "control": {
+                "controlType": "cyclic",
+                "controlAt": 10.0
+            },             
+            "motionModel": 
+                    {
+                        "type": "rungekutta",
+                        "at": 1.0,
+                        "decision": [
+                            {
+                                "name": "speed",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            },
+                            {
+                                "name": "heading",
+                                "type": "absolute",
+                                "min": -180.0,
+                                "max": 180.0
+                            },
+                            {
+                                "name": "elevation",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            }
+                        ]
+                    },
+            "initState": 
+                    {
+                        "lat": 36.8687866974819,
+                        "lng": -2.7917287909395,            
+                        "alt": 914.0,
+                        "heading": 0.0,
+                        "speed": 84.875999999999990,
+                        "fuel": 10000.0,
+                        "time": 0.0
+                    },
+            "finalState": 
+                    {
+                        "fuel": 200.0,
+                        "time": 500.0
+                    },
+            "sensors": 
+                    [
+                        {
+                            "name": "sensor1",
+                            "type": "cameraC",
+                            "control": {
+                                "controlType": "cyclic",
+                                "controlAt": 10.0
+                            },                         
+                            "payload": 
+                                    {
+                                        "type": "camera",
+                                        "captureAt": 1.0                       
+                                    },
+                            "motionModel": 
+                                    {
+                                        "type": "rungekutta",
+                                        "at": 1.0,
+                                        "decision": [
+                                            {
+                                                "name": "azimuth",
+                                                "type": "absolute",
+                                                "min": -90.0,
+                                                "max": 90.0
+                                            },
+                                            {
+                                                "name": "elevation",
+                                                "type": "absolute",
+                                                "min": 15.0,
+                                                "max": 90.0
+                                            }
+                                        ]
+                                    },
+                            "initState": 
+                                    {
+                                        "azimuth": 0.0,
+                                        "elevation": 45.0,
+                                        "time": 0.0          
+                                    },
+                            "endTime": 600.0                  
+                        }                
+                    ]
+        }
+    ],
+    "cntrlParams": {
+        "numOfRuns": 10,
+        "subsequence": 100.0,
+        "stopCriteria": {
+            "iterations": 100,
+            "time": 300.0,
+            "pd": 1.0
+        },
+        "topology": "fullConnected",        
+        "logIterations": true
+    },
+    "algorithms": [
+        {
+            "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
+            "sortingMethod": "CROWDING_DISTANCE",                
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "firstFront",
+                "nx": 2,
+                "ni": 25
+            }
+        },
+        {
+            "type": "spea2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
+            "sortingMethod": "CROWDING_DISTANCE",                
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "ns": 50,
+            "nf": 1,            
+            "migration": {
+                "type": "firstFront",
+                "nx": 2,
+                "ni": 25                
+            }
+        },
+        {
+            "type": "nspso",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
+            "sortingMethod": "CROWDING_DISTANCE",                    
+            "c1": 2.0,
+            "c2": 2.0,
+            "chi": 1.0,
+            "w": 0.4,
+            "topPartPercentage": 0.25,
+            "ns": 50,
+            "nf": 1,            
+            "migration": {
+                "type": "firstFront",
+                "nx": 2,
+                "ni": 25                
+            }
+        },
+        {
+            "type": "omopso",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
+            "sortingMethod": "CROWDING_DISTANCE",                    
+            "c1": 2.0,
+            "c2": 2.0,
+            "chi": 1.0,
+            "w": 0.4,
+            "topPartPercentage": 0.25,
+            "mutation": [0.1, 0.01],            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "firstFront",
+                "nx": 2,
+                "ni": 25                
+            }
+        },        
+        {
+            "type": "mode",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
+            "sortingMethod": "CROWDING_DISTANCE",                    
+            "recombine": {
+                "factor": 0.5,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "firstFront",
+                "nx": 2,
+                "ni": 25                
+            }
+        }
+    ]
+}

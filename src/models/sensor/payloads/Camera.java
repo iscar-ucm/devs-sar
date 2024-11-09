@@ -139,15 +139,15 @@ public class Camera extends Payload {
                 // current point X,Y coordinates (cameraLoS is at the center of the matrix)
                 double pointX, pointY;
                 pointX
-                        = -(cameraMatrix.getNumRows() / 2) * difX + x * difX;
+                        = -(cameraMatrix.getNumRows() / 2) * difX + x * difX + cameraLoS.getX();
                 pointY
-                        = -(cameraMatrix.getNumCols() / 2) * difX + y * difY;
+                        = -(cameraMatrix.getNumCols() / 2) * difY + y * difY + cameraLoS.getY();
 
                 // calculate in which searchArea cell is the point
                 int xCell
-                        = (int) Math.ceil((pointY + cameraLoS.getY()) / sensorLikelihood.getxScale());
+                        = (int) Math.floor(pointY / sensorLikelihood.getyScale());
                 int yCell
-                        = (int) Math.ceil((pointX + cameraLoS.getX()) / sensorLikelihood.getyScale());
+                        = (int) Math.floor(pointX / sensorLikelihood.getxScale());
 
                 // check the point is inside the searchArea
                 if (xCell >= 0 && xCell < sensorLikelihood.getxCells()

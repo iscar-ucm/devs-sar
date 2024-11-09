@@ -37,10 +37,6 @@ public class DinamicTargetControl extends TargetControl {
             super.holdIn("evaluating", clock);
 
         } else if (phaseIs("updateMotionModel")) {
-            // check if current belief should be save it or not            
-            if (myTarget.isFullPath()) {
-                myTarget.getPath().add(currentState);
-            }
             // wait remaining time
             super.holdIn("evaluating", clock);
 
@@ -69,10 +65,11 @@ public class DinamicTargetControl extends TargetControl {
             if (myTarget != null) {
                 currentState = myTarget.getInitState();
                 targetBelief = currentState.getBelief().copy();
+                prevProb = CommonOps_DDRM.elementSum(targetBelief);
+                missPd = Math.max(1.0 - prevProb - myTarget.getPd(), 0.0);
                 scenarioTime = myTarget.getInitState().getTime();
                 prevTime = scenarioTime;
                 endTime = myTarget.getEndSequenceTime();
-                missPd = myTarget.getMissPD();
                 etd = myTarget.getEtd();
                 super.holdIn("start", clock);
                 LOGGER.log(
@@ -89,15 +86,11 @@ public class DinamicTargetControl extends TargetControl {
             if (!tcI3.isEmpty()) {
                 // new motion model belief prediction has arrived
                 currentState = tcI3.getSingleValue();
-                // update missing PD due to motion model predictions
-                missPd += currentState.getMissPd();
-                targetBelief = currentState.getBelief().copy();
-                scenarioTime = currentState.getTime();
-                // calculate elapsed time since last capture
-                double elapsedTime = scenarioTime - prevTime;
-                prevTime = scenarioTime;
-                // update etd
-                etd += (CommonOps_DDRM.elementSum(targetBelief) + missPd) * elapsedTime;
+                targetBelief = currentState.getBelief().copy();                
+                // update missing pd due to motion model predictions
+                newProb = CommonOps_DDRM.elementSum(targetBelief);
+                missPd += Math.max(prevProb - newProb, 0.0);
+                prevProb = newProb;
                 // check if current belief should be save it or not            
                 if (myTarget.isFullPath()) {
                     myTarget.getPath().add(currentState);
@@ -116,13 +109,19 @@ public class DinamicTargetControl extends TargetControl {
                 scenarioTime = sensorLikelihoods.get(0).getTime();
                 // perform sensorFusion
                 sensorFusion();
+                newProb = CommonOps_DDRM.elementSum(targetBelief);
+                prevProb = newProb;                
                 // calculate elapsed time since last capture
                 double elapsedTime = scenarioTime - prevTime;
                 prevTime = scenarioTime;
-                // update etd & dp
+                // update etd
                 etd += (CommonOps_DDRM.elementSum(targetBelief) + missPd) * elapsedTime;
-                dp = 1.0 - CommonOps_DDRM.elementSum(targetBelief);
-                currentState = new TargetState(targetBelief.copy(), scenarioTime, dp, etd);
+                // update pd                
+                pd = 1.0 - CommonOps_DDRM.elementSum(targetBelief) - missPd;
+                currentState = new TargetState(targetBelief.copy(), scenarioTime, pd, etd);
+                if (myTarget.isFullPath()) {
+                    myTarget.getPath().add(currentState);
+                }                
                 super.holdIn("updateMotionModel", 0.0);
             }
         }
@@ -152,13 +151,13 @@ public class DinamicTargetControl extends TargetControl {
                         = new TargetState(
                                 targetBelief.copy(),
                                 scenarioTime,
-                                dp, etd);
+                                pd, etd);
                 myTarget.getPath().add(currentState);
             } else {
-                // make sure etd & dp are updated in the last state just in case
+                // make sure etd & pd are updated in the last state just in case
                 // this is a prediction state
                 if (currentState.isPrediction()) {
-                    currentState.setPd(dp);
+                    currentState.setPd(pd);
                     currentState.setEtd(etd);
                 }
             }

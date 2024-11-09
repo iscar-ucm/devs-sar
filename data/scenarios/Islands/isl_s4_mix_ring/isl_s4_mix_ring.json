@@ -1,0 +1,736 @@
+{
+    "benchmark": "Scenario 4, cyclic, 1sol",
+    "zone": {    
+        "latitude": 36.8687866974819,
+        "longitude": -2.7917287909395,
+        "xWidth": 30000.0,
+        "yHeight": 20000.0,
+        "areaBearing": 0.0,
+        "xCells": 80,
+        "yCells": 80
+    },
+    "nfzs": [
+        {
+            "xRow": 35,
+            "yCol": 35
+        }, {
+            "xRow": 35,
+            "yCol": 36
+        }, {
+            "xRow": 35,
+            "yCol": 37
+        }, {
+            "xRow": 35,
+            "yCol": 38
+        }, {
+            "xRow": 35,
+            "yCol": 39
+        }, {
+            "xRow": 35,
+            "yCol": 40
+        }, {
+            "xRow": 35,
+            "yCol": 41
+        }, {
+            "xRow": 35,
+            "yCol": 42
+        }, {
+            "xRow": 35,
+            "yCol": 43
+        }, {
+            "xRow": 35,
+            "yCol": 44
+        }, {
+            "xRow": 35,
+            "yCol": 45
+        }, {
+            "xRow": 36,
+            "yCol": 35
+        }, {
+            "xRow": 36,
+            "yCol": 36
+        }, {
+            "xRow": 36,
+            "yCol": 37
+        }, {
+            "xRow": 36,
+            "yCol": 38
+        }, {
+            "xRow": 36,
+            "yCol": 39
+        }, {
+            "xRow": 36,
+            "yCol": 40
+        }, {
+            "xRow": 36,
+            "yCol": 41
+        }, {
+            "xRow": 36,
+            "yCol": 42
+        }, {
+            "xRow": 36,
+            "yCol": 43
+        }, {
+            "xRow": 36,
+            "yCol": 44
+        }, {
+            "xRow": 36,
+            "yCol": 45
+        }, {
+            "xRow": 37,
+            "yCol": 35
+        }, {
+            "xRow": 37,
+            "yCol": 36
+        }, {
+            "xRow": 37,
+            "yCol": 37
+        }, {
+            "xRow": 37,
+            "yCol": 38
+        }, {
+            "xRow": 37,
+            "yCol": 39
+        }, {
+            "xRow": 37,
+            "yCol": 40
+        }, {
+            "xRow": 37,
+            "yCol": 41
+        }, {
+            "xRow": 37,
+            "yCol": 42
+        }, {
+            "xRow": 37,
+            "yCol": 43
+        }, {
+            "xRow": 37,
+            "yCol": 44
+        }, {
+            "xRow": 37,
+            "yCol": 45
+        }, {
+            "xRow": 38,
+            "yCol": 35
+        }, {
+            "xRow": 38,
+            "yCol": 36
+        }, {
+            "xRow": 38,
+            "yCol": 37
+        }, {
+            "xRow": 38,
+            "yCol": 38
+        }, {
+            "xRow": 38,
+            "yCol": 39
+        }, {
+            "xRow": 38,
+            "yCol": 40
+        }, {
+            "xRow": 38,
+            "yCol": 41
+        }, {
+            "xRow": 38,
+            "yCol": 42
+        }, {
+            "xRow": 38,
+            "yCol": 43
+        }, {
+            "xRow": 38,
+            "yCol": 44
+        }, {
+            "xRow": 38,
+            "yCol": 45
+        }, {
+            "xRow": 39,
+            "yCol": 35
+        }, {
+            "xRow": 39,
+            "yCol": 36
+        }, {
+            "xRow": 39,
+            "yCol": 37
+        }, {
+            "xRow": 39,
+            "yCol": 38
+        }, {
+            "xRow": 39,
+            "yCol": 39
+        }, {
+            "xRow": 39,
+            "yCol": 40
+        }, {
+            "xRow": 39,
+            "yCol": 41
+        }, {
+            "xRow": 39,
+            "yCol": 42
+        }, {
+            "xRow": 39,
+            "yCol": 43
+        }, {
+            "xRow": 39,
+            "yCol": 44
+        }, {
+            "xRow": 39,
+            "yCol": 45
+        }, {
+            "xRow": 40,
+            "yCol": 35
+        }, {
+            "xRow": 40,
+            "yCol": 36
+        }, {
+            "xRow": 40,
+            "yCol": 37
+        }, {
+            "xRow": 40,
+            "yCol": 38
+        }, {
+            "xRow": 40,
+            "yCol": 39
+        }, {
+            "xRow": 40,
+            "yCol": 40
+        }, {
+            "xRow": 40,
+            "yCol": 41
+        }, {
+            "xRow": 40,
+            "yCol": 42
+        }, {
+            "xRow": 40,
+            "yCol": 43
+        }, {
+            "xRow": 40,
+            "yCol": 44
+        }, {
+            "xRow": 40,
+            "yCol": 45
+        }, {
+            "xRow": 41,
+            "yCol": 35
+        }, {
+            "xRow": 41,
+            "yCol": 36
+        }, {
+            "xRow": 41,
+            "yCol": 37
+        }, {
+            "xRow": 41,
+            "yCol": 38
+        }, {
+            "xRow": 41,
+            "yCol": 39
+        }, {
+            "xRow": 41,
+            "yCol": 40
+        }, {
+            "xRow": 41,
+            "yCol": 41
+        }, {
+            "xRow": 41,
+            "yCol": 42
+        }, {
+            "xRow": 41,
+            "yCol": 43
+        }, {
+            "xRow": 41,
+            "yCol": 44
+        }, {
+            "xRow": 41,
+            "yCol": 45
+        }, {
+            "xRow": 42,
+            "yCol": 35
+        }, {
+            "xRow": 42,
+            "yCol": 36
+        }, {
+            "xRow": 42,
+            "yCol": 37
+        }, {
+            "xRow": 42,
+            "yCol": 38
+        }, {
+            "xRow": 42,
+            "yCol": 39
+        }, {
+            "xRow": 42,
+            "yCol": 40
+        }, {
+            "xRow": 42,
+            "yCol": 41
+        }, {
+            "xRow": 42,
+            "yCol": 42
+        }, {
+            "xRow": 42,
+            "yCol": 43
+        }, {
+            "xRow": 42,
+            "yCol": 44
+        }, {
+            "xRow": 42,
+            "yCol": 45
+        }, {
+            "xRow": 43,
+            "yCol": 35
+        }, {
+            "xRow": 43,
+            "yCol": 36
+        }, {
+            "xRow": 43,
+            "yCol": 37
+        }, {
+            "xRow": 43,
+            "yCol": 38
+        }, {
+            "xRow": 43,
+            "yCol": 39
+        }, {
+            "xRow": 43,
+            "yCol": 40
+        }, {
+            "xRow": 43,
+            "yCol": 41
+        }, {
+            "xRow": 43,
+            "yCol": 42
+        }, {
+            "xRow": 43,
+            "yCol": 43
+        }, {
+            "xRow": 43,
+            "yCol": 44
+        }, {
+            "xRow": 43,
+            "yCol": 45
+        }, {
+            "xRow": 44,
+            "yCol": 35
+        }, {
+            "xRow": 44,
+            "yCol": 36
+        }, {
+            "xRow": 44,
+            "yCol": 37
+        }, {
+            "xRow": 44,
+            "yCol": 38
+        }, {
+            "xRow": 44,
+            "yCol": 39
+        }, {
+            "xRow": 44,
+            "yCol": 40
+        }, {
+            "xRow": 44,
+            "yCol": 41
+        }, {
+            "xRow": 44,
+            "yCol": 42
+        }, {
+            "xRow": 44,
+            "yCol": 43
+        }, {
+            "xRow": 44,
+            "yCol": 44
+        }, {
+            "xRow": 44,
+            "yCol": 45
+        }, {
+            "xRow": 45,
+            "yCol": 35
+        }, {
+            "xRow": 45,
+            "yCol": 36
+        }, {
+            "xRow": 45,
+            "yCol": 37
+        }, {
+            "xRow": 45,
+            "yCol": 38
+        }, {
+            "xRow": 45,
+            "yCol": 39
+        }, {
+            "xRow": 45,
+            "yCol": 40
+        }, {
+            "xRow": 45,
+            "yCol": 41
+        }, {
+            "xRow": 45,
+            "yCol": 42
+        }, {
+            "xRow": 45,
+            "yCol": 43
+        }, {
+            "xRow": 45,
+            "yCol": 44
+        }, {
+            "xRow": 45,
+            "yCol": 45
+        }
+    ],
+    "windMatrix": {
+        "xCells": 1,
+        "yCells": 1,
+        "xScale": 30000.0,
+        "yScale": 20000.0,
+        "winds": 
+                [
+                    [
+                        {
+                            "speed": 0.0,
+                            "angle": 0.0,
+                            "time": 0.0
+                        }
+                    ]
+                ]
+    },   
+    "targets": [
+        {
+            "name": "target1",
+            "motionModel": 
+                    {
+                        "type": "homogeneous",
+                        "nonEscape": false,
+                        "at": 75.0,
+                        "points": [
+                            {
+                                "xCell": 0,
+                                "yCell": 0,
+                                "actions": [0.0, 0.5, 0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.25]
+                            }                       
+                        ]
+                    },
+            "initState": {
+                "function": "gaussian",
+                "gaussians": [ 
+                    {
+                        "mu": [20, 40],
+                        "cov": [
+                            [16.0, 0.0],
+                            [0.0, 16.0]
+                        ],
+                        "weight": 0.9
+                    },
+                    {
+                        "mu": [40, 60],
+                        "cov": [
+                            [7.11, 0.0],
+                            [0.0, 7.11]
+                        ],
+                        "weight": 1.2
+                    },
+                    {
+                        "mu": [60, 40],
+                        "cov": [
+                            [16.0, 0.0],
+                            [0.0, 16.0]
+                        ],
+                        "weight": 0.9
+                    }   
+                ],
+                "time": 0.0
+            },
+            "endTime": 900.0
+        }
+    ],
+    "uavs": [
+        {
+            "name": "uav_1", 
+            "type": "MK-III",
+            "control": {
+                "controlType": "cyclic",
+                "controlAt": 10.0
+            },             
+            "motionModel": 
+                    {
+                        "type": "rungekutta",
+                        "at": 1.0,
+                        "decision": [
+                            {
+                                "name": "speed",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            },
+                            {
+                                "name": "heading",
+                                "type": "absolute",
+                                "min": -180.0,
+                                "max": 180.0
+                            },
+                            {
+                                "name": "elevation",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            }
+                        ]
+                    },
+            "initState": 
+                    {
+                        "lat": 36.8687866974819,
+                        "lng": -2.6467287909395,           
+                        "alt": 1066.0,
+                        "heading": 90.0,
+                        "speed": 52.3,
+                        "fuel": 100000.0,
+                        "time": 0.0
+                    },
+            "finalState": 
+                    {
+                        "fuel": 200.0,
+                        "time": 900.0
+                    },
+            "sensors": 
+                    [
+                        {
+                            "name": "sensor1",
+                            "type": "radarVer",
+                            "payload": 
+                                    {
+                                        "type": "radar",
+                                        "captureAt": 2.0                       
+                                    },
+                            "motionModel": 
+                                    {
+                                        "type": "staticModel"
+                                    },
+                            "initState": 
+                                    {                    
+                                        "time": 0.0          
+                                    },
+                            "endTime": 900.0                  
+                        }                
+                    ]
+        },
+        {
+            "name": "uav_2", 
+            "type": "MK-III",
+            "control": {
+                "controlType": "cyclic",
+                "controlAt": 10.0
+            },             
+            "motionModel": 
+                    {
+                        "type": "rungekutta",
+                        "at": 1.0,
+                        "decision": [
+                            {
+                                "name": "speed",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            },
+                            {
+                                "name": "heading",
+                                "type": "absolute",
+                                "min": -180.0,
+                                "max": 180.0
+                            },
+                            {
+                                "name": "elevation",
+                                "type": "noaction",
+                                "min": 0.0,
+                                "max": 0.0
+                            }
+                        ]
+                    },
+            "initState": 
+                    {
+                        "lat": 36.8687866974819,
+                        "lng": -2.6507287909395,           
+                        "alt": 1066.0,
+                        "heading": 90.0,
+                        "speed": 52.3,
+                        "fuel": 100000.0,
+                        "time": 0.0
+                    },
+            "finalState": 
+                    {
+                        "fuel": 200.0,
+                        "time": 900.0
+                    },
+            "sensors": 
+                    [
+                        {
+                            "name": "sensor1",
+                            "type": "radarVer",
+                            "payload": 
+                                    {
+                                        "type": "radar",
+                                        "captureAt": 2.0                       
+                                    },
+                            "motionModel": 
+                                    {
+                                        "type": "staticModel"
+                                    },
+                            "initState": 
+                                    {                    
+                                        "time": 0.0          
+                                    },
+                            "endTime": 900.0                  
+                        }                
+                    ]
+        }        
+    ],
+    "cntrlParams": {
+        "numOfRuns": 20,
+        "stopCriteria": {
+            "iterations": 100,
+            "time": 30000.0,
+            "pd": 1.0
+        },
+        "topology": "ring",        
+        "logIterations": true
+    },
+    "algorithms": [	
+        {
+            "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 2,             
+            "migration": {
+                "type": "diversity",
+                "nx": 5,
+                "ni": 25
+            }
+        },
+        {
+            "type": "mode",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "recombine": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "firstFront",
+                "ni": 25
+            }
+        },        
+        {
+            "type": "spea2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 2,             
+            "migration": {
+                "type": "diversity",
+                "nx": 5,
+                "ni": 25
+            }
+        },
+        {
+            "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "firstFront",
+                "ni": 25
+            }
+        },          
+        {
+            "type": "mode",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "recombine": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 2,             
+            "migration": {
+                "type": "diversity",
+                "nx": 5,
+                "ni": 25
+            }
+        },              
+        {
+            "type": "spea2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "firstFront",
+                "ni": 25
+            }
+        }
+    ]
+}

@@ -123,7 +123,7 @@ public class UavControl extends Atomic {
             } else {
                 // cntrlSignals are empty so wait until uav endTime
                 clock = myUav.getSeqEndTime() - scenarioTime;
-                super.holdIn("waiting", clock);                
+                super.holdIn("waiting", clock);
             }
 
         } else if (phaseIs("control")) {
@@ -222,8 +222,8 @@ public class UavControl extends Atomic {
     public void deltcon() {
         deltext(0);
         deltint();
-    }        
-    
+    }
+
     @Override
     public void lambda() {
 

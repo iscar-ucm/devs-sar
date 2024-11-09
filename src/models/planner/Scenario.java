@@ -73,22 +73,22 @@ public class Scenario {
                     = AlgorithmType.valueOf((String) iAlgorytmJS.get("type"));
             switch (algoType) {            
                 case nsga2:
-                    algorithms.add(new NSGA2(iAlgorytmJS, cntrlParams));
+                    algorithms.add(new NSGA2(iAlgorytmJS));
                     break;
                 case spea2:
-                    algorithms.add(new SPEA2(iAlgorytmJS, cntrlParams));
+                    algorithms.add(new SPEA2(iAlgorytmJS));
                     break;
                 case nspso:
-                    algorithms.add(new NSPSO(iAlgorytmJS, cntrlParams));
+                    algorithms.add(new NSPSO(iAlgorytmJS));
                     break;
                 case omopso:
-                    algorithms.add(new OMOPSO(iAlgorytmJS, cntrlParams));
+                    algorithms.add(new OMOPSO(iAlgorytmJS));
                     break;
                 case mode:
-                    algorithms.add(new MODE(iAlgorytmJS, cntrlParams));
+                    algorithms.add(new MODE(iAlgorytmJS));
                     break;                    
                 case acor:
-                    algorithms.add(new ACOR(iAlgorytmJS, cntrlParams));
+                    algorithms.add(new ACOR(iAlgorytmJS));
                     break;
             }            
         }

@@ -24,7 +24,7 @@ import models.uav.UavState;
  * @author jbbordon
  */
 public class EvaluatorFunction extends Atomic {
-
+    
     private static final Logger LOGGER = Logger.getLogger(EvaluatorFunction.class.getName());
 
     // in Ports of the model);
@@ -43,7 +43,7 @@ public class EvaluatorFunction extends Atomic {
     protected ArrayList<Uav> uavs;
     protected ArrayList<Target> targets;
     protected double clock;
-
+    
     public EvaluatorFunction(String coupledName, int numUavs, int numTargets) {
         super(coupledName + " EF");
         // Ports of the Atomic model
@@ -69,7 +69,7 @@ public class EvaluatorFunction extends Atomic {
             super.addOutPort(tPortO2);
         }
     }
-
+    
     @Override
     public void initialize() {
         searchArea = null;
@@ -79,7 +79,7 @@ public class EvaluatorFunction extends Atomic {
         clock = 0.0;
         super.passivate();
     }
-
+    
     @Override
     public void exit() {
         searchArea = null;
@@ -89,14 +89,14 @@ public class EvaluatorFunction extends Atomic {
         clock = 0.0;
         super.passivate();
     }
-
+    
     @Override
     public void deltint() {
         if (phaseIs("outputData")) {
             exit();
         }
     }
-
+    
     @Override
     public void deltext(double e) {
         if (phaseIs("passive")) {
@@ -128,7 +128,6 @@ public class EvaluatorFunction extends Atomic {
                 evaluateCollisions();
                 evaluateNFZs();
                 evaluateSmoothness();
-                evaluateFuelEmpties();
                 evaluateTgts();
 
                 // output data
@@ -136,7 +135,7 @@ public class EvaluatorFunction extends Atomic {
             }
         }
     }
-
+    
     @Override
     public void lambda() {
         if (phaseIs("outputData")) {
@@ -156,7 +155,7 @@ public class EvaluatorFunction extends Atomic {
      * collisions and ground collisions.
      */
     private void evaluateCollisions() {
-
+        
         if (uavs.size() > 1) {
 
             /* UAVS COLLISION CHECK */
@@ -164,52 +163,53 @@ public class EvaluatorFunction extends Atomic {
 
                 // variable to hold uav1 path
                 ArrayList<UavState> uav1Path = uavs.get(u1).getPath();
+                int uav1Coll = uav1Path.get(0).getCol();
+                
+                for (int u2 = 0; u2 < uavs.size(); ++u2) {
+                    
+                    if (u1 != u2) {
 
-                for (int u2 = u1 + 1; u2 < uavs.size(); ++u2) {
+                        //  variable to hold uav2 path
+                        ArrayList<UavState> uav2Path = uavs.get(u2).getPath();
 
-                    //  variable to hold uav2 path
-                    ArrayList<UavState> uav2Path = uavs.get(u2).getPath();
+                        // loop uav1Path & uav2Path
+                        int index1 = 0;
+                        int index2 = 0;
+                        
+                        while (index1 < uav1Path.size() && index2 < uav2Path.size()) {
 
-                    // loop uav1Path & uav2Path
-                    int index1 = 0;
-                    int index2 = 0;
-
-                    while (index1 < uav1Path.size() && index2 < uav2Path.size()) {
-
-                        // current states of the path
-                        UavState uav1State = uav1Path.get(index1);
-                        UavState uav2State = uav2Path.get(index2);
-
-                        if (uav1State.getTime() == uav2State.getTime()) {
-                            // time is the same check possible collision
-                            double distance = Math.sqrt(
-                                    Math.pow(uav2State.getX() - uav1State.getX(), 2.0)
-                                    + Math.pow(uav2State.getY() - uav1State.getY(), 2.0)
-                                    + Math.pow(uav2State.getHeight() - uav1State.getHeight(), 2.0)
-                            );
-
-                            if (distance <= uavs.get(u1).getMotionModel().getSafteyDist()) {
-                                // collision flag should be set
-                                uavs.get(u1).setTotalCollisions();
+                            // current states of the path
+                            UavState uav1State = uav1Path.get(index1);
+                            UavState uav2State = uav2Path.get(index2);
+                            
+                            if (uav1State.getTime() == uav2State.getTime()) {
+                                // time is the same check possible collision
+                                double distance = Math.sqrt(
+                                        Math.pow(uav2State.getX() - uav1State.getX(), 2.0)
+                                        + Math.pow(uav2State.getY() - uav1State.getY(), 2.0)
+                                        + Math.pow(uav2State.getHeight() - uav1State.getHeight(), 2.0)
+                                );
+                                
+                                if (distance <= uavs.get(u1).getMotionModel().getSafteyDist()) {
+                                    // collision count should be incremented
+                                    uav1Coll++;
+                                }
+                                // advace both uavPaths
+                                index1++;
+                                index2++;
+                                
+                            } else if (uav1State.getTime() > uav2State.getTime()) {
+                                // advance uav2Path as uav1State time is higher
+                                index2++;
+                                
+                            } else {
+                                // advance uav1Path as uav2State time is higher
+                                index1++;
                             }
-                            if (distance <= uavs.get(u2).getMotionModel().getSafteyDist()) {
-                                // collision flag should be set
-                                uavs.get(u2).setTotalCollisions();
-                            }
-                            // advace both uavPaths
-                            index1++;
-                            index2++;
-
-                        } else if (uav1State.getTime() > uav2State.getTime()) {
-                            // advance uav2Path as uav1State time is higher
-                            index2++;
-
-                        } else {
-                            // advance uav1Path as uav2State time is higher
-                            index1++;
                         }
                     }
                 }
+                uav1Path.get(uav1Path.size() - 1).setCol(uav1Coll);
             }
         }
         /* HERE SHOULD BE A GROUND COLLISION CHECK */
@@ -220,11 +220,12 @@ public class EvaluatorFunction extends Atomic {
      * overflight.
      */
     private void evaluateNFZs() {
-
+        
         for (int u = 0; u < uavs.size(); ++u) {
 
             // variable to hold uav path
             ArrayList<UavState> uavPath = uavs.get(u).getPath();
+            int uavNFZs = uavPath.get(0).getNfzs();
 
             // loop each state in the path
             for (int i = 0; i < uavPath.size(); ++i) {
@@ -236,9 +237,9 @@ public class EvaluatorFunction extends Atomic {
                 int n = 0;
                 boolean exit = false;
                 int uavXCell
-                        = (int) Math.floor(uavState.getX() / searchArea.getxScale());
-                int uavYCell
                         = (int) Math.floor(uavState.getY() / searchArea.getyScale());
+                int uavYCell
+                        = (int) Math.floor(uavState.getX() / searchArea.getxScale());
 
                 // loop nfz array
                 while (!exit && n < nfzs.length) {
@@ -246,39 +247,13 @@ public class EvaluatorFunction extends Atomic {
                     // check for NFZ overflight
                     if (uavXCell == nfzs[n].getxRow() && uavYCell == nfzs[n].getyCol()) {
                         // nfz flag should be set
-                        uavs.get(u).setTotalNFZs();
+                        uavNFZs++;
                         exit = true;
                     } else {
                         n++;
                     }
                 }
-            }
-        }
-    }
-
-    /**
-     * Evaluate feseability of each uav State in terms of possible fuel empty.
-     */
-    private void evaluateFuelEmpties() {
-
-        for (int u = 0; u < uavs.size(); ++u) {
-
-            // variable to hold uav path & and uav end fuel
-            double endFuel = uavs.get(u).getEndFuel();
-            ArrayList<UavState> uavPath = uavs.get(u).getPath();
-
-            // loop each state in the path
-            for (int i = 0; i < uavPath.size(); ++i) {
-
-                // retrieve current state
-                UavState uavState = uavPath.get(i);
-
-                // check fuel
-                if (uavState.getFuel() < endFuel) {
-                    // fuel empty flag
-                    uavs.get(u).setTotalFuelEmpties();
-                }
-
+                uavState.setNfzs(uavNFZs);
             }
         }
     }
@@ -287,7 +262,7 @@ public class EvaluatorFunction extends Atomic {
      * Evaluate heading actions smoothness of each uav
      */
     private void evaluateSmoothness() {
-
+        
         for (int u = 0; u < uavs.size(); ++u) {
 
             // retrive u Uav heading decision type
@@ -300,60 +275,59 @@ public class EvaluatorFunction extends Atomic {
             }
             headingType = decisionArray[d].getType();
 
-            // variable to hold uav cntrlSignals
-            ArrayList<UavCntrlSignals> cntrlSignals = uavs.get(u).getCntrlSignals();
+            // variable to loop uav cntrlSignals
+            ArrayList<UavCntrlSignals> allSignals = new ArrayList();
+            allSignals.addAll(uavs.get(u).getPrevCntrlSignals());
+            allSignals.addAll(uavs.get(u).getCntrlSignals());
 
-            // variables to hold actual & prev heading cntrl
-            double actCntrl, prevCntrl;
-
-            if (headingType == DecisionVarType.absolute) {
-                // get prev absolute value and do the angular difference to
-                // convert the absolute signal to incremental
-                prevCntrl = cntrlSignals.get(0).getcHeading()
-                        - uavs.get(u).getInitState().getHeading();
-                while (prevCntrl < -180.0) {
-                    prevCntrl += 2 * 180.0;
-                }
-                while (prevCntrl > 180.0) {
-                    prevCntrl -= 2 * 180.0;
-                }
-            } else {
-                prevCntrl = cntrlSignals.get(0).getcHeading();
-            }
-
-            // loop each cntrlSignal in the path
-            for (int i = 1; i < cntrlSignals.size(); ++i) {
-
-                // retrive actual heading cntrl action
-                actCntrl = cntrlSignals.get(i).getcHeading();
-
+            // check uav has not started yet or has ended before this sequence
+            if (!allSignals.isEmpty()) {
+                
+                double actCntrl, prevCntrl;
+                double smoothValue = 0.0;
+                
                 if (headingType == DecisionVarType.absolute) {
-                    // get prev absolute value and do the angular difference to
-                    // convert the absolute signal to incremental
-                    actCntrl -= cntrlSignals.get(i - 1).getcHeading();
-                    while (actCntrl < -180.0) {
-                        actCntrl += 2 * 180.0;
-                    }
-                    while (actCntrl > 180.0) {
-                        actCntrl -= 2 * 180.0;
-                    }
+                    prevCntrl = allSignals.get(0).getcHeading();
+                } else {
+                    prevCntrl = allSignals.get(0).getcHeading()
+                            - uavs.get(u).getInitState().getHeading();
                 }
 
-                // calculate prevCntrl & actCntrl signs
-                double actCntrlSign = Math.signum(actCntrl);
-                double prevCntrlSign = Math.signum(prevCntrl);
+                // loop each cntrlSignal in the path
+                for (int i = 1; i < allSignals.size(); ++i) {
 
-                // check if there is a sign change between each cntrl signal,
-                // which is interpretate as the uav changing the direction
-                if (actCntrlSign + prevCntrlSign == 0.0) {
-                    uavs.get(u).setSmoothValue(
-                            uavs.get(u).getSmoothValue()
-                            + Math.pow(
-                                    Math.abs(actCntrl) + Math.abs(prevCntrl),
-                                    2.0));
+                    // retrive actual heading cntrl action
+                    actCntrl = allSignals.get(i).getcHeading();
+                    
+                    if (headingType == DecisionVarType.absolute) {
+                        // angular difference to convert the absolute signal to incremental
+                        actCntrl -= allSignals.get(i - 1).getcHeading();
+                        while (actCntrl < -180.0) {
+                            actCntrl += 2 * 180.0;
+                        }
+                        while (actCntrl > 180.0) {
+                            actCntrl -= 2 * 180.0;
+                        }
+                    }
+
+                    // calculate prevCntrl & actCntrl signs
+                    double actCntrlSign = Math.signum(actCntrl);
+                    double prevCntrlSign = Math.signum(prevCntrl);
+
+                    // check if there is a sign change between each cntrl signal,
+                    // which is interpretate as the uav changing the direction
+                    if (actCntrlSign + prevCntrlSign == 0.0) {
+                        smoothValue
+                                += Math.pow(
+                                        Math.abs(actCntrl) + Math.abs(prevCntrl),
+                                        2.0);
+                    }
+
+                    // set smooth value
+                    allSignals.get(i).setSmooth(smoothValue);
+                    // update previous value
+                    prevCntrl = actCntrl;
                 }
-
-                prevCntrl = actCntrl;
             }
         }
     }
@@ -364,8 +338,8 @@ public class EvaluatorFunction extends Atomic {
     private void evaluateTgts() {
         // loop each target
         for (int t = 0; t < targets.size(); ++t) {
-            targets.get(t).calculateTargetHeuristic(uavs);
+            targets.get(t).calculateMyopia(uavs);
         }
     }
-
+    
 }

@@ -12,14 +12,12 @@ package models.optimizer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.UUID;
 import models.target.Target;
 import models.uav.Uav;
 import org.ejml.data.DMatrixRMaj;
 
 public class Solution {
 
-    private UUID id;
     private ArrayList<Uav> uavs;
     private ArrayList<Target> tgts;
     private DMatrixRMaj constraints;
@@ -36,14 +34,11 @@ public class Solution {
      * @param properties
      */
     public Solution(
-            UUID id,
             ArrayList<Uav> uavs,
             ArrayList<Target> tgts,
             DMatrixRMaj constraints,
             DMatrixRMaj paretos,
             HashMap<String, Number> properties) {
-        
-        this.id = id;
 
         this.uavs = new ArrayList<>();
         for (int u = 0; u < uavs.size(); ++u) {
@@ -56,7 +51,7 @@ public class Solution {
             // clone each tgt
             this.tgts.add(tgts.get(t).clone());
         }
-
+        
         this.constraints = constraints.copy();
         this.paretos = paretos.copy();
 
@@ -69,14 +64,11 @@ public class Solution {
     /**
      * This constructor is used to copy an existing solution.
      *
-     * @param id
      * @param uavs
      * @param tgts
      */
-    public Solution(UUID id, ArrayList<Uav> uavs, ArrayList<Target> tgts) {
-        
-        this.id = id;        
-        
+    public Solution(ArrayList<Uav> uavs, ArrayList<Target> tgts) {
+
         this.uavs = new ArrayList<>();
         for (int u = 0; u < uavs.size(); ++u) {
             // clone each uav
@@ -91,35 +83,12 @@ public class Solution {
     }
 
     /**
-     * This constructor is used to create an empty solution.
-     *
-     * @param uavs
-     * @param tgts
-     */
-    public Solution(ArrayList<Uav> uavs, ArrayList<Target> tgts) {
-        
-        this.uavs = new ArrayList<>();
-        for (int u = 0; u < uavs.size(); ++u) {
-            // clone each uav
-            this.uavs.add(uavs.get(u).copy());
-        }
-
-        this.tgts = new ArrayList<>();
-        for (int t = 0; t < tgts.size(); ++t) {
-            // clone each tgt
-            this.tgts.add(tgts.get(t).copy());
-        }
-    }    
-    
-    /**
      * This constructor is used to create a new solution with the result of an
      * evaluation.
      *
      */
-    public Solution(ArrayList<Uav> uavs, ArrayList<Target> tgts, CntrlParams params) {
+    public Solution(ArrayList<Uav> uavs, ArrayList<Target> tgts, Objectives objectives) {   
 
-        id = UUID.randomUUID();        
-        
         this.uavs = new ArrayList<>();
         for (int u = 0; u < uavs.size(); ++u) {
             // clone each uav
@@ -132,8 +101,8 @@ public class Solution {
             this.tgts.add(tgts.get(t).clone());
         }
 
-        constraints = new DMatrixRMaj(1, params.getConstraints().length);
-        paretos = new DMatrixRMaj(1, params.getParetos().length);
+        constraints = new DMatrixRMaj(1, objectives.getConstraints().length);
+        paretos = new DMatrixRMaj(1, objectives.getParetos().length);
 
         // for each uav
         for (int u = 0; u < this.uavs.size(); ++u) {
@@ -144,28 +113,24 @@ public class Solution {
             // for each constraint         
             for (int c = 0; c < constraints.getNumCols(); ++c) {
 
-                switch (params.getConstraints()[c]) {
+                switch (objectives.getConstraints()[c]) {
                     case nfz:
                         // add the u Uav constraint value
-                        constraints.add(0, c, uav.getTotalNFZs());
+                        constraints.add(0, c, uav.getNFZs());
                         break;
 
                     case collision:
                         // add the u Uav constraint value
-                        constraints.add(0, c, uav.getTotalCollisions());
+                        constraints.add(0, c, uav.getCol());
                         break;
 
-                    case fuel:
-                        // add the u Uav constraint value
-                        constraints.add(0, c, uav.getTotalFuelEmpties());
-                        break;
                 }
             }
 
             // for each pareto         
             for (int p = 0; p < paretos.getNumCols(); ++p) {
 
-                switch (params.getParetos()[p]) {
+                switch (objectives.getParetos()[p]) {
                     case fuel:
                         // calculate fuel consumption
                         double fuelConsumption
@@ -174,8 +139,8 @@ public class Solution {
                         // apply pareto factor and round it
                         fuelConsumption
                                 = Math.round(fuelConsumption
-                                        * params.getParetosFactors()[p])
-                                / params.getParetosFactors()[p];
+                                        * objectives.getParetosFactors()[p])
+                                / objectives.getParetosFactors()[p];
                         paretos.add(0, p, fuelConsumption);
                         break;
 
@@ -186,8 +151,8 @@ public class Solution {
                         // apply pareto factor and round it
                         smoothValue
                                 = Math.round(smoothValue
-                                        * params.getParetosFactors()[p])
-                                / 10.0;
+                                        * objectives.getParetosFactors()[p])
+                                / objectives.getParetosFactors()[p];
                         paretos.add(0, p, smoothValue);
                 }
             }
@@ -195,7 +160,7 @@ public class Solution {
         // for each pareto      
         for (int p = 0; p < paretos.getNumCols(); ++p) {
 
-            switch (params.getParetos()[p]) {
+            switch (objectives.getParetos()[p]) {
 
                 case etd:
                     // ETD for all the tgts
@@ -210,8 +175,8 @@ public class Solution {
                     // apply pareto factor and round it
                     globalETD
                             = Math.round(globalETD
-                                    * params.getParetosFactors()[p])
-                            / params.getParetosFactors()[p];
+                                    * objectives.getParetosFactors()[p])
+                            / objectives.getParetosFactors()[p];
                     // add the global ETD pareto value
                     paretos.add(0, p, globalETD);
                     break;
@@ -224,46 +189,40 @@ public class Solution {
                         // retrieve the t Uav
                         Target target = this.tgts.get(t);
                         globalNDP
-                                -= (target.getDp())
+                                -= (target.getPd())
                                 / tgts.size();
                     }
                     // apply pareto factor and round it
                     globalNDP
                             = Math.round(globalNDP
-                                    * params.getParetosFactors()[p])
-                            / params.getParetosFactors()[p];
+                                    * objectives.getParetosFactors()[p])
+                            / objectives.getParetosFactors()[p];
                     // add the global nDP pareto value
                     paretos.add(0, p, globalNDP);
                     break;
 
-                case heurist:
-                    // heurist for all the tgts
-                    double globalHeurist = 0.0;
+                case myo:
+                    // myo for all the tgts
+                    double globalMyo = 0.0;
                     for (int t = 0; t < this.tgts.size(); ++t) {
                         // retrieve the t Uav
                         Target target = this.tgts.get(t);
-                        globalHeurist
-                                += (target.getHeuristic())
+                        globalMyo
+                                += (target.getMyo())
                                 / tgts.size();
                     }
                     // apply pareto factor and round it
-                    globalHeurist
-                            = Math.round(globalHeurist
-                                    * params.getParetosFactors()[p])
-                            / params.getParetosFactors()[p];
-                    // add the global heurist pareto value
-                    paretos.add(0, p, globalHeurist);
+                    globalMyo
+                            = Math.round(globalMyo
+                                    * objectives.getParetosFactors()[p])
+                            / objectives.getParetosFactors()[p];
+                    // add the global myo pareto value
+                    paretos.add(0, p, globalMyo);
                     break;
+
             }
         }
         properties = new HashMap<String, Number>();
-    }
-
-    /**
-     * @return the id
-     */
-    public UUID getId() {
-        return id;
     }
 
     /**
@@ -302,9 +261,9 @@ public class Solution {
     }
 
     /**
-     * @return the objectives
+     * @return the constraints and paretos together
      */
-    public ArrayList<Double> getObjectives() {
+    public ArrayList<Double> getResults() {
         ArrayList<Double> objectives = new ArrayList<>();
         for (int c = 0; c < getConstraints().getNumCols(); ++c) {
             objectives.add(getConstraints().get(0, c));
@@ -318,15 +277,15 @@ public class Solution {
     public HashMap<String, Number> getProperties() {
         return properties;
     }
-    
+
     public Solution copy() {
-        return new Solution(getId(), getUavs(), getTgts());
+        return new Solution(getUavs(), getTgts());
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public Solution clone() {
-        return new Solution(getId(), getUavs(), getTgts(), getConstraints(), getParetos(), getProperties());
+        return new Solution(getUavs(), getTgts(), getConstraints(), getParetos(), getProperties());
     }
 
     public int compareTo(Solution solution, Comparator<Solution> comparator) {

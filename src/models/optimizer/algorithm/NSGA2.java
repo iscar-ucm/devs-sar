@@ -7,8 +7,8 @@ package models.optimizer.algorithm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Random;
-import models.optimizer.CntrlParams;
 import models.optimizer.Problem;
 import models.optimizer.Solution;
 import models.optimizer.operator.crossover.SinglePoint;
@@ -53,14 +53,14 @@ public class NSGA2 extends Algorithm {
 
     // auxiliar data
     private Random rnd;
+    private HashSet<Integer> alreadyChosen;
 
     /**
      *
      * @param algorithmJSON
-     * @param cntrlParams
      */
-    public NSGA2(JSONObject algorithmJSON, CntrlParams cntrlParams) {
-        super(algorithmJSON, cntrlParams);
+    public NSGA2(JSONObject algorithmJSON) {
+        super(algorithmJSON);
 
         // read Genetic configuration parameters
         JSONObject selectionJS = (JSONObject) algorithmJSON.get("selection");
@@ -88,7 +88,7 @@ public class NSGA2 extends Algorithm {
         for (int i = 0; i < mutationJS.size(); ++i) {
             mutationF[i] = (double) mutationJS.get(i);
         }
-        mutationOperator = new Mutation(mutationF, cntrlParams);
+        mutationOperator = new Mutation(mutationF);
     }
 
     /**
@@ -150,17 +150,18 @@ public class NSGA2 extends Algorithm {
      * This method generates the first set of random solutions. The number of
      * solutions to be generated it's configured by numSol field.
      *
-     * @param myProblem the current problem state.
+     * @param problems the current problem(s) state(s).
      * @return a ns ArrayList of Solution
      */
     @Override
-    public ArrayList<Solution> initialize(Problem myProblem) {
+    public ArrayList<Solution> initialize(ArrayList<Problem> problems) {
 
         // reset sequence data
         population = new ArrayList<>();
         fronts = new ArrayList<>();
         dominance = new SolutionDominance();
         rnd = new Random();
+        alreadyChosen = new HashSet<>();
         firstIteration = true;
 
         // create a new set of solutions from scratch
@@ -168,7 +169,15 @@ public class NSGA2 extends Algorithm {
 
         for (int i = 0; i < ns; ++i) {
 
-            Solution iSol = myProblem.newSolution();
+            // select randomly a scenario definition from the problem pool
+            int problemIdx = rnd.nextInt(problems.size());
+            if (alreadyChosen.contains(problemIdx) && alreadyChosen.size() < problems.size()) {
+                do {
+                    problemIdx = rnd.nextInt(problems.size());
+                } while (alreadyChosen.contains(problemIdx));
+            }
+            alreadyChosen.add(problemIdx);
+            Solution iSol = problems.get(problemIdx).newSolution();
 
             // for each uav in the solution
             for (int u = 0; u < iSol.getUavs().size(); ++u) {
@@ -218,25 +227,24 @@ public class NSGA2 extends Algorithm {
 
         if (!isFirstIteration()) {
             // Create the union of previous and offSpringPop generations
-            ArrayList<Solution> mixedPop = new ArrayList<>();
-            mixedPop.addAll(population);
+            ArrayList<Solution> offSpring = new ArrayList<>();
+            offSpring.addAll(population);
             for (int i = 0; i < ns; i++) {
                 Solution child = new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams);
-                mixedPop.add(child);
+                        objectives);
+                offSpring.add(child);
             }
             // reduce the union
-            population = reduce(mixedPop);
-
+            population = reduce(offSpring);
         } else {
             // flag to false and create initial generation
             for (int i = 0; i < ns; i++) {
                 population.add(new Solution(
                         evaluatedUavs.get(i),
                         evaluatedTgts.get(i),
-                        cntrlParams));
+                        objectives));
             }
             firstIteration = false;
         }
@@ -265,6 +273,19 @@ public class NSGA2 extends Algorithm {
 
     }
 
+    @Override
+    public void tradeIn(ArrayList<Solution> solutions) {
+        // Create the union of the algorithm current generation and the tradeIn
+        // solutions
+        ArrayList<Solution> mixedPop = new ArrayList<>();
+        mixedPop.addAll(population);
+        solutions.forEach(solution -> {
+            mixedPop.add(solution.clone());
+        });
+        // reduce the union
+        population = reduce(mixedPop);
+    }
+
     /**
      * This method reduce the union between the offspring & the previous
      * generation.
@@ -284,16 +305,16 @@ public class NSGA2 extends Algorithm {
             front = fronts.get(i);
             if ((front.size() + reducedPop.size()) > ns) {
                 // add members of the current front until max size is reached
-                if (cntrlParams.getSortingMethod().indexOf("CROWDING_DISTANCE") == 0) {
-                    CrowdingDistance assigner = new CrowdingDistance(front.get(0).getObjectives().size());
+                if (sortingMethod.startsWith("CROWDING_DISTANCE")) {
+                    CrowdingDistance assigner = new CrowdingDistance(front.get(0).getResults().size());
                     assigner.execute(front);
                     Collections.sort(front, new PropertyComparator(CrowdingDistance.propertyCrowdingDistance));
                     for (int j = front.size() - 1; reducedPop.size() < ns; --j) {
                         reducedPop.add(front.get(j));
                     }
 
-                } else if (cntrlParams.getSortingMethod().indexOf("NICHE_COUNT") == 0) {
-                    NicheCount assigner = new NicheCount(front.get(0).getObjectives().size());
+                } else if (sortingMethod.startsWith("NICHE_COUNT")) {
+                    NicheCount assigner = new NicheCount(front.get(0).getResults().size());
                     assigner.execute(front);
                     Collections.sort(front, new PropertyComparator(NicheCount.propertyNicheCount));
                     for (int j = 0; reducedPop.size() < ns; ++j) {

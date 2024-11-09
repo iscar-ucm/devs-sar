@@ -7,7 +7,6 @@ package models.optimizer.operator;
 
 import java.util.ArrayList;
 import java.util.Random;
-import models.optimizer.CntrlParams;
 import models.optimizer.DecisionVar;
 import models.optimizer.DecisionVarType;
 import models.optimizer.Solution;
@@ -24,11 +23,9 @@ import models.uav.UavCntrlSignals;
 public class Mutation {
 
     private final double[] mutationF;
-    private final CntrlParams cntrlParams;
 
-    public Mutation(double[] mutationF, CntrlParams cntrlParams) {
+    public Mutation(double[] mutationF) {
         this.mutationF = mutationF;
-        this.cntrlParams = cntrlParams;
     }
 
     public void execute(ArrayList<Solution> solutions) {
@@ -41,7 +38,7 @@ public class Mutation {
             }
         }
     }
-    
+
     /**
      * This method mutates the UavCntrlSignals arraylist of the input uav and of
      * all the sensors in the uav.
@@ -61,7 +58,8 @@ public class Mutation {
             int applyHigherMutation = 0;
             if (Math.random()
                     < (1
-                    / (cntrlParams.getSequenceTime() / uavCntrl.size()))) {
+                    / ((uav.getFinalState().getTime() - uav.getInitState().getTime())
+                    / uavCntrl.size()))) {
                 applyHigherMutation = 1;
             }
 
@@ -125,12 +123,11 @@ public class Mutation {
                                 } else {
                                     newValue += 360;
                                 }
-                            } else {
-                                if (newValue > decision[d].getMaxValue()) {
-                                    newValue = decision[d].getMaxValue();
-                                } else if (newValue < decision[d].getMinValue()) {
-                                    newValue = decision[d].getMinValue();
-                                }
+                            }
+                            if (newValue > decision[d].getMaxValue()) {
+                                newValue = decision[d].getMaxValue();
+                            } else if (newValue < decision[d].getMinValue()) {
+                                newValue = decision[d].getMinValue();
                             }
 
                             uavCntrl.get(i).setcHeading(newValue);
@@ -147,8 +144,8 @@ public class Mutation {
                 mutateSensor(uav.getSensors().get(s));
             }
         }
-    }    
-    
+    }
+
     /**
      * This method mutates the SensorCntrlSignals arraylist of the input sensor.
      *
@@ -168,7 +165,8 @@ public class Mutation {
             int applyHigherMutation = 0;
             if (Math.random()
                     < (1
-                    / (cntrlParams.getSequenceTime() / sensorCntrl.size()))) {
+                    / ((sensor.getFinalState().getTime() - sensor.getInitState().getTime())
+                    / sensorCntrl.size()))) {
                 applyHigherMutation = 1;
             }
 
@@ -221,12 +219,11 @@ public class Mutation {
                                 } else {
                                     newValue += 360;
                                 }
-                            } else {
-                                if (newValue > decision[d].getMaxValue()) {
-                                    newValue = decision[d].getMaxValue();
-                                } else if (newValue < decision[d].getMinValue()) {
-                                    newValue = decision[d].getMinValue();
-                                }
+                            }
+                            if (newValue > decision[d].getMaxValue()) {
+                                newValue = decision[d].getMaxValue();
+                            } else if (newValue < decision[d].getMinValue()) {
+                                newValue = decision[d].getMinValue();
                             }
 
                             sensorCntrl.get(i).setcAzimuth(newValue);
@@ -235,5 +232,5 @@ public class Mutation {
                 }
             }
         }
-    }     
+    }
 }

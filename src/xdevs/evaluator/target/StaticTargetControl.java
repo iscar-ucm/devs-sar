@@ -82,8 +82,8 @@ public class StaticTargetControl extends TargetControl {
                 // calculate etd
                 etd += CommonOps_DDRM.elementSum(targetBelief) * elapsedTime;
 
-                // calculate dp
-                dp = 1.0 - CommonOps_DDRM.elementSum(targetBelief);
+                // calculate pd
+                pd = 1.0 - CommonOps_DDRM.elementSum(targetBelief);
 
                 // check if current belief should be save it or not
                 if (myTarget.isFullPath()) {
@@ -92,7 +92,7 @@ public class StaticTargetControl extends TargetControl {
                             = new TargetState(
                                     targetBelief.copy(),
                                     scenarioTime,
-                                    dp, etd);
+                                    pd, etd);
                     myTarget.getPath().add(currentState);
                 }
             }
@@ -116,7 +116,7 @@ public class StaticTargetControl extends TargetControl {
                         = new TargetState(
                                 targetBelief.copy(),
                                 scenarioTime,
-                                dp, etd);
+                                pd, etd);
                 myTarget.getPath().add(currentState);
             }
             // target time has ended so output evaluated target                    

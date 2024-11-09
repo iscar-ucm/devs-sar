@@ -10,5 +10,5 @@ package models.optimizer;
  * @author Juan
  */
 public enum OptimizationVarType {
-    etd, quad2, var2, etdvar2, heurist, pd, fuel, smooth, nfz, collision
+    etd, myo, pd, fuel, smooth, nfz, collision
 }

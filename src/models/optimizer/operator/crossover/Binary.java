@@ -133,6 +133,14 @@ public class Binary extends CrossOver {
             double randA = Math.random();
 
             if (randA < getCrossOverF()) {
+                // select cntrlActions from B parent for the first child
+                newSignals = cntrlB.get(c).clone();
+                firstChild.add(newSignals);
+                // select cntrlActions from A parent for the second child
+                newSignals = cntrlA.get(c).clone();
+                secondChild.add(newSignals);
+
+            } else {
                 // select cntrlActions from A parent for the first child
                 newSignals = cntrlA.get(c).clone();
                 firstChild.add(newSignals);
@@ -140,13 +148,6 @@ public class Binary extends CrossOver {
                 newSignals = cntrlB.get(c).clone();
                 secondChild.add(newSignals);
 
-            } else {
-                // select cntrlActions from B parent for the first child
-                newSignals = cntrlB.get(c).clone();
-                firstChild.add(newSignals);
-                // select cntrlActions from A parent for the second child
-                newSignals = cntrlA.get(c).clone();
-                secondChild.add(newSignals);
             }
         }
         // store uavChildSignals created and return it
@@ -188,6 +189,14 @@ public class Binary extends CrossOver {
                 double randA = Math.random();
 
                 if (randA < getCrossOverF()) {
+                    // select cntrlActions from B parent for the first child
+                    newSignals = cntrlB.get(c).clone();
+                    firstChild.add(newSignals);
+                    // select cntrlActions from A parent for the second child
+                    newSignals = cntrlA.get(c).clone();
+                    secondChild.add(newSignals);
+
+                } else {
                     // select cntrlActions from A parent for the first child
                     newSignals = cntrlA.get(c).clone();
                     firstChild.add(newSignals);
@@ -195,13 +204,6 @@ public class Binary extends CrossOver {
                     newSignals = cntrlB.get(c).clone();
                     secondChild.add(newSignals);
 
-                } else {
-                    // select cntrlActions from B parent for the first child
-                    newSignals = cntrlB.get(c).clone();
-                    firstChild.add(newSignals);
-                    // select cntrlActions from A parent for the second child
-                    newSignals = cntrlA.get(c).clone();
-                    secondChild.add(newSignals);
                 }
             }
             // add the rest of the signals
@@ -223,6 +225,14 @@ public class Binary extends CrossOver {
                 double randA = Math.random();
 
                 if (randA < getCrossOverF()) {
+                    // select cntrlActions from B parent for the first child
+                    newSignals = cntrlB.get(c).clone();
+                    firstChild.add(newSignals);
+                    // select cntrlActions from A parent for the second child
+                    newSignals = cntrlA.get(c).clone();
+                    secondChild.add(newSignals);
+
+                } else {
                     // select cntrlActions from A parent for the first child
                     newSignals = cntrlA.get(c).clone();
                     firstChild.add(newSignals);
@@ -230,13 +240,6 @@ public class Binary extends CrossOver {
                     newSignals = cntrlB.get(c).clone();
                     secondChild.add(newSignals);
 
-                } else {
-                    // select cntrlActions from B parent for the first child
-                    newSignals = cntrlB.get(c).clone();
-                    firstChild.add(newSignals);
-                    // select cntrlActions from A parent for the second child
-                    newSignals = cntrlA.get(c).clone();
-                    secondChild.add(newSignals);
                 }
             }
             // add the rest of the signals
@@ -289,6 +292,14 @@ public class Binary extends CrossOver {
             double randA = Math.random();
 
             if (randA < getCrossOverF()) {
+                // select cntrlActions from B parent for the first child
+                newSignals = cntrlB.get(c).clone();
+                firstChild.add(newSignals);
+                // select cntrlActions from A parent for the second child
+                newSignals = cntrlA.get(c).clone();
+                secondChild.add(newSignals);
+
+            } else {
                 // select cntrlActions from A parent for the first child
                 newSignals = cntrlA.get(c).clone();
                 firstChild.add(newSignals);
@@ -296,13 +307,6 @@ public class Binary extends CrossOver {
                 newSignals = cntrlB.get(c).clone();
                 secondChild.add(newSignals);
 
-            } else {
-                // select cntrlActions from B parent for the first child
-                newSignals = cntrlB.get(c).clone();
-                firstChild.add(newSignals);
-                // select cntrlActions from A parent for the second child
-                newSignals = cntrlA.get(c).clone();
-                secondChild.add(newSignals);
             }
         }
         // store sensorChildSignals created and return it
@@ -344,19 +348,19 @@ public class Binary extends CrossOver {
                 double randA = Math.random();
 
                 if (randA < getCrossOverF()) {
-                    // select cntrlActions from A parent for the first child
-                    newSignals = cntrlA.get(c).clone();
-                    firstChild.add(newSignals);
-                    // select cntrlActions from B parent for the second child
-                    newSignals = cntrlB.get(c).clone();
-                    secondChild.add(newSignals);
-
-                } else {
                     // select cntrlActions from B parent for the first child
                     newSignals = cntrlB.get(c).clone();
                     firstChild.add(newSignals);
                     // select cntrlActions from A parent for the second child
                     newSignals = cntrlA.get(c).clone();
+                    secondChild.add(newSignals);
+
+                } else {
+                    // select cntrlActions from A parent for the first child
+                    newSignals = cntrlA.get(c).clone();
+                    firstChild.add(newSignals);
+                    // select cntrlActions from B parent for the second child
+                    newSignals = cntrlB.get(c).clone();
                     secondChild.add(newSignals);
                 }
             }
@@ -379,6 +383,14 @@ public class Binary extends CrossOver {
                 double randA = Math.random();
 
                 if (randA < getCrossOverF()) {
+                    // select cntrlActions from B parent for the first child
+                    newSignals = cntrlB.get(c).clone();
+                    firstChild.add(newSignals);
+                    // select cntrlActions from A parent for the second child
+                    newSignals = cntrlA.get(c).clone();
+                    secondChild.add(newSignals);
+
+                } else {
                     // select cntrlActions from A parent for the first child
                     newSignals = cntrlA.get(c).clone();
                     firstChild.add(newSignals);
@@ -386,13 +398,6 @@ public class Binary extends CrossOver {
                     newSignals = cntrlB.get(c).clone();
                     secondChild.add(newSignals);
 
-                } else {
-                    // select cntrlActions from B parent for the first child
-                    newSignals = cntrlB.get(c).clone();
-                    firstChild.add(newSignals);
-                    // select cntrlActions from A parent for the second child
-                    newSignals = cntrlA.get(c).clone();
-                    secondChild.add(newSignals);
                 }
             }
             // add the rest of the signals

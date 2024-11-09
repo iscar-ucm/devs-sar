@@ -28,7 +28,7 @@ public class OpTool1 extends Coupled {
 
             // coupling of IC (TI & PL)
             super.addCoupling(ti.tiO1, op.opI1);
-            super.addCoupling(op.opO1, ti.tiI1);
+            super.addCoupling(op.opO2, ti.tiI1);
 
     }
 }

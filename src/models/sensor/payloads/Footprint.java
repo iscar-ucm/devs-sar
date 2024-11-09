@@ -74,21 +74,21 @@ public class Footprint extends Payload {
 
         // calculate possible cells affected by the footPrint 
         int nCell
-                = (int) Math.floor((uavState.getY() - footPrint2) / yScale) - 1; // N cell          
+                = (int) Math.floor((uavState.getY() + footPrint2) / yScale) - 1; // N cell          
         int eCell
                 = (int) Math.floor((uavState.getX() + footPrint2) / xScale) - 1; // E cell
         int sCell
-                = (int) Math.floor((uavState.getY() + footPrint2) / yScale) - 1; // S cell        
+                = (int) Math.floor((uavState.getY() - footPrint2) / yScale) - 1; // S cell        
         int wCell
                 = (int) Math.floor((uavState.getX() - footPrint2) / xScale) - 1; // W cell
 
         // calculate rem area outside affected cells
         double nRem
-                = 1 - (((uavState.getY() - footPrint2) % yScale) / yScale); // N cell
+                = 1 - (((uavState.getY() + footPrint2) % yScale) / yScale); // N cell
         double eRem
-                = 1 - (((uavState.getX() - footPrint2) % xScale) / xScale); // E cell        
-        double sRem = ((uavState.getY() + footPrint2) % yScale) / yScale; // S cell
-        double wRem = ((uavState.getX() + footPrint2) % xScale) / xScale; // W cell         
+                = 1 - (((uavState.getX() + footPrint2) % xScale) / xScale); // E cell        
+        double sRem = ((uavState.getY() - footPrint2) % yScale) / yScale; // S cell
+        double wRem = ((uavState.getX() - footPrint2) % xScale) / xScale; // W cell         
 
         // border cases
         int incX = 0;
@@ -107,9 +107,9 @@ public class Footprint extends Payload {
         for (int i = wCell; i <= eCell; ++i) {
             indexX[i - wCell] = i + incX;
         }
-        int[] indexY = new int[sCell - nCell + 1];
-        for (int i = nCell; i <= sCell; ++i) {
-            indexY[i - nCell] = i + incY;
+        int[] indexY = new int[nCell - sCell + 1];
+        for (int i = sCell; i <= nCell; ++i) {
+            indexY[i - sCell] = i + incY;
         }
 
         // calculate footPrint area for each cell
@@ -121,8 +121,8 @@ public class Footprint extends Payload {
         }
         partX[0] = eRem;
         partX[indexX.length - 1] = wRem;
-        partY[0] = nRem;
-        partY[indexY.length - 1] = sRem;
+        partY[0] = sRem;
+        partY[indexY.length - 1] = nRem;
 
         // apply values to sensor matrix
         DMatrixRMaj newMatrix = new DMatrixRMaj(
@@ -130,8 +130,8 @@ public class Footprint extends Payload {
         for (int x = 0; x < indexX.length; ++x) {
             // check indexes are inside valid boundaries
             for (int y = 0; y < indexY.length; ++y) {
-                if (indexX[x] >= 0 && indexX[x] < sensorLikelihood.getxCells()
-                        && indexY[y] >= 0 && indexY[y] < sensorLikelihood.getyCells()) {
+                if (indexX[x] >= 0 && indexX[x] < sensorLikelihood.getyCells()
+                        && indexY[y] >= 0 && indexY[y] < sensorLikelihood.getxCells()) {
                     newMatrix.set(indexY[y], indexX[x], partX[x] * partY[y] * pMax);
                 }
             }

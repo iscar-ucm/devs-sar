@@ -102,10 +102,10 @@ public class Target {
     /**
      * Constructor. Used to copy a Target.
      *
-     */    
+     */
     public Target(String name, MotionModel motionModel, int xCells, int yCells,
             double xScale, double yScale, double startTime, double endTime,
-            double endSequenceTime, TargetState initState) {      
+            double endSequenceTime, TargetState initState) {
         this.name = name;
         this.xCells = xCells;
         this.yCells = yCells;
@@ -126,8 +126,8 @@ public class Target {
         }
         this.startTime = startTime;
         fullPath = false;
-        this.path = new ArrayList<>();    
-        this.path.add(initState.clone());        
+        this.path = new ArrayList<>();
+        this.path.add(initState.clone());
         this.endTime = endTime;
         this.endSequenceTime = endSequenceTime;
     }
@@ -135,10 +135,10 @@ public class Target {
     /**
      * Constructor. Used to clone a Target.
      *
-     */    
+     */
     public Target(String name, MotionModel motionModel, int xCells, int yCells,
             double xScale, double yScale, double startTime, double endTime,
-            double endSequenceTime, boolean fullPath, ArrayList<TargetState> path) {      
+            double endSequenceTime, boolean fullPath, ArrayList<TargetState> path) {
         this.name = name;
         this.xCells = xCells;
         this.yCells = yCells;
@@ -163,10 +163,10 @@ public class Target {
         this.path = new ArrayList<>();
         for (short i = 0; i < path.size(); i++) {
             this.path.add(path.get(i).clone());
-        }      
+        }
         this.endTime = endTime;
         this.endSequenceTime = endSequenceTime;
-    }    
+    }
 
     /**
      * @return the name
@@ -255,7 +255,7 @@ public class Target {
     /**
      * @return the dp
      */
-    public double getDp() {
+    public double getPd() {
         return getFinalState().getPd();
     }
 
@@ -269,15 +269,8 @@ public class Target {
     /**
      * @return the heuristic
      */
-    public double getHeuristic() {
-        return getFinalState().getHeuristic();
-    }
-    
-    /**
-     * @return the missPD
-     */
-    public double getMissPD() {
-        return getFinalState().getMissPd();
+    public double getMyo() {
+        return getFinalState().getMyo();
     }
 
     /**
@@ -323,78 +316,90 @@ public class Target {
     }
 
     /**
-     * This method calculates the myopia heuristic given a uav solution.
+     * This method calculates the myopia criteria given a uav solution.
      *
      * @param uavs the solution reached.
      */
-    public void calculateTargetHeuristic(ArrayList<Uav> uavs) {
+    public void calculateMyopia(ArrayList<Uav> uavs) {
 
-        // retrive target last state belief
-        DMatrixRMaj lastBelief = getFinalState().getBelief().copy();
+        if (endSequenceTime == endTime) {
 
-        // variable to hold the heuristic map
-        DMatrixRMaj tgtHeuristicMap = new DMatrixRMaj(xCells, yCells);
-        CommonOps_DDRM.add(tgtHeuristicMap, 1.0);
+            // myopia criteria shouldn't be evaluated in the last sequence
+            getFinalState().setMyo(0.0);
 
-        for (int u = 0; u < uavs.size(); ++u) {
+        } else {
 
-            // variable to hold the heuristic map for each uav
-            DMatrixRMaj uavHeuristicMap = new DMatrixRMaj(xCells, yCells);
+            // retrive target last state belief
+            DMatrixRMaj lastBelief = getFinalState().getBelief().copy();
 
-            // retrieve u uav end state
-            UavState endState = uavs.get(u).getFinalState();
+            // variable to hold the heuristic map
+            DMatrixRMaj myoMap = new DMatrixRMaj(xCells, yCells);
+            CommonOps_DDRM.add(myoMap, 1.0);
 
-            // locate uav in the target belief
-            int uavXCell
-                    = (int) Math.floor(endState.getY() / yScale);
-            int uavYCell
-                    = (int) Math.floor(endState.getX() / xScale);
+            for (int u = 0; u < uavs.size(); ++u) {
 
-            // calculate uav speed in terms of cells step until endTime
-            double uavCellsByStep
-                    = (uavs.get(u).getMotionModel().getAt() * endState.getAirSpeed())
-                    / Math.sqrt(Math.pow(xScale, 2.0) + Math.pow(yScale, 2.0));
-            double remSteps
-                    = (uavs.get(u).getEndTime() - endState.getTime())
-                    / uavs.get(u).getMotionModel().getAt();
-            double reach
-                    = remSteps * uavCellsByStep;
-            double lambda
-                    = Math.pow((1.0 - 0.95), (1.0 / reach));
+                // this checks if the UAV was simulated this sequence or not
+                if (!uavs.get(u).getCntrlSignals().isEmpty()) {
 
-            // loop each cell in the target belief
-            for (int x = 0; x < xCells; ++x) {
+                    // variable to hold the heuristic map for each uav
+                    DMatrixRMaj uavHeuristicMap = new DMatrixRMaj(xCells, yCells);
 
-                for (int y = 0; y < yCells; ++y) {
+                    // retrieve u uav end state
+                    UavState endState = uavs.get(u).getFinalState();
 
-                    // calculate distance from uav end state to current cell
-                    double cellDistance = Math.sqrt(
-                            Math.pow(x - uavXCell, 2.0)
-                            + Math.pow(y - uavYCell, 2.0)
-                    );
+                    // locate uav in the target belief
+                    int uavXCell
+                            = (int) Math.floor(endState.getY() / yScale);
+                    int uavYCell
+                            = (int) Math.floor(endState.getX() / xScale);
 
-                    // calculate angle difference from uav heading to current cell
-                    double cellAngle
-                            = Math.atan2(x - uavXCell, y - uavYCell) * 180 / Math.PI;
-                    double angleDiff
-                            = (endState.getHeading() - cellAngle) % 180.0;
+                    // calculate uav speed in terms of cells step until endTime
+                    double uavCellsByStep
+                            = (uavs.get(u).getMotionModel().getAt() * endState.getAirSpeed())
+                            / Math.sqrt(Math.pow(xScale, 2.0) + Math.pow(yScale, 2.0));
+                    double remSteps
+                            = (uavs.get(u).getEndTime() - endState.getTime())
+                            / uavs.get(u).getMotionModel().getAt();
+                    double reach
+                            = remSteps * uavCellsByStep;
+                    double lambda
+                            = Math.pow((1.0 - 0.95), (1.0 / reach));
 
-                    // compute distance taking in count the angle difference
-                    cellDistance += Math.abs(angleDiff * 10.0 / 180.0);
+                    // loop each cell in the target belief
+                    for (int x = 0; x < xCells; ++x) {
 
-                    // finally calculate the cellValue
-                    double cellValue
-                            = 1.0 - (Math.pow(lambda, cellDistance));
+                        for (int y = 0; y < yCells; ++y) {
 
-                    uavHeuristicMap.set(x, y, cellValue);
+                            // calculate distance from uav end state to current cell
+                            double cellDistance = Math.sqrt(
+                                    Math.pow(x - uavXCell, 2.0)
+                                    + Math.pow(y - uavYCell, 2.0)
+                            );
+
+                            // calculate angle difference from uav heading to current cell
+                            double cellAngle
+                                    = Math.atan2(x - uavXCell, y - uavYCell) * 180 / Math.PI;
+                            double angleDiff
+                                    = (endState.getHeading() - cellAngle) % 180.0;
+
+                            // compute distance taking in count the angle difference
+                            cellDistance += Math.abs(angleDiff * 10.0 / 180.0);
+
+                            // finally calculate the cellValue
+                            double cellValue
+                                    = 1.0 - (Math.pow(lambda, cellDistance));
+
+                            uavHeuristicMap.set(x, y, cellValue);
+                        }
+                    }
+                    // compute iUav heuristic map 
+                    CommonOps_DDRM.elementMult(myoMap, uavHeuristicMap);
                 }
             }
-            // compute iUav heuristic map 
-            CommonOps_DDRM.elementMult(tgtHeuristicMap, uavHeuristicMap);
+            // finally compute target heuristic map with last target belief
+            CommonOps_DDRM.elementMult(myoMap, lastBelief);
+            getFinalState().setMyo(CommonOps_DDRM.elementSum(myoMap));
         }
-        // finally compute target heuristic map with last target belief
-        CommonOps_DDRM.elementMult(tgtHeuristicMap, lastBelief);
-        getFinalState().setHeuristic(CommonOps_DDRM.elementSum(tgtHeuristicMap));
     }
 
     /**
@@ -516,6 +521,9 @@ public class Target {
                 belief.set(x, y, Math.exp(-aux2.get(0) / 2.0));
             }
         }
+        // normalize belief
+        double sum = CommonOps_DDRM.elementSum(belief);
+        CommonOps_DDRM.divide(belief, sum);
         return belief;
     }
 

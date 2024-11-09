@@ -121,7 +121,7 @@
             "name": "uav_1", 
             "type": "typeA",
             "control": {
-                "controlType": "cyclic",
+                "controlType": "acyclic",
                 "controlAt": 10.0
             },             
             "motionModel": 
@@ -190,7 +190,7 @@
             "name": "uav_2", 
             "type": "typeA",
             "control": {
-                "controlType": "cyclic",
+                "controlType": "acyclic",
                 "controlAt": 10.0
             },             
             "motionModel": 
@@ -278,22 +278,22 @@
         }
     ],
     "cntrlParams": {
-        "numOfRuns": 4,
-        "subsequence": 100.0,
+        "numOfRuns": 1,
         "stopCriteria": {
             "iterations": 100,
             "time": 300.0,
             "pd": 1.0
         },
-        "exchangeIteration": 0,    
-        "logIterations": true,        
-        "constraints": ["nfz", "collision"],
-        "paretos": ["heurist", "etd", "pd"],
-        "sortingMethod": "CROWDING_DISTANCE"  
+        "logIterations": true
     },
     "algorithms": [
         {
             "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
             "selection": {
                 "method": "binaryTournament"
             },
@@ -302,11 +302,21 @@
                 "method": "singlePoint"
             },
             "mutation": [0.1, 0.01],
-                         
-            "ns": 50
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 100.0,             
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
         },
         {
             "type": "spea2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosA"
+            },
             "selection": {
                 "method": "binaryTournament"
             },
@@ -315,42 +325,13 @@
                 "method": "singlePoint"
             },
             "mutation": [0.1, 0.01],
-                         
-            "ns": 50
-        },
-        {
-            "type": "nspso",
-            "c1": 2.0,
-            "c2": 2.0,
-            "chi": 1.0,
-            "w": 0.4,
-            "topPartPercentage": 0.25,
-                        
-            "ns": 50
-        },
-        {
-            "type": "omopso",
-            "c1": 2.0,
-            "c2": 2.0,
-            "chi": 1.0,
-            "w": 0.4,
-            "topPartPercentage": 0.25,
-            "mutation": [0.1, 0.01],            
-                         
-            "ns": 50
-        },        
-        {
-            "type": "mode",
-            "retrieve": {
-                "method": "firstFront"
-            },
-            "recombine": {
-                "factor": 0.5,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 100.0,            
             "ns": 50,
-            "nf": 3
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
         }
     ]
 }

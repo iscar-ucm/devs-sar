@@ -7,6 +7,7 @@ package models.optimizer.comparator;
 
 import java.util.Comparator;
 import models.optimizer.Solution;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 /**
  *
@@ -21,21 +22,23 @@ public class ParetoSort implements Comparator<Solution> {
     public int compare(Solution left, Solution right) {
         int compare = 0;
         boolean end = false;
-        int col = 0;
 
-        // sort by constraint order
-        while (!end && col < left.getConstraints().getNumCols()) {
-            if (left.getConstraints().get(0, col) < right.getConstraints().get(0, col)) {
-                end = true;
-                compare = -1;
-            } else if ((left.getConstraints().get(0, col) > right.getConstraints().get(0, col))) {
-                end = true;
-                compare = 1;
-            } else {
-                col++;
-            }
+        // sort by the sum of every constraint of each member
+        double valueA = CommonOps_DDRM.elementSum(left.getConstraints());
+        double valueB = CommonOps_DDRM.elementSum(right.getConstraints());
+
+        // Constraints compare
+        if (valueA < valueB) {
+            end = true;
+            compare = -1;
+        } else if (valueB < valueA) {
+            // B member has a better fitness so must be selected
+            end = true;
+            compare = 1;
         }
 
+        int col = 0;        
+        
         if (!end) {
             // 2nd lever order, sort by paretos
             col = 0;
