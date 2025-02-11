@@ -34,7 +34,7 @@ public class JSONLoader {
      * @return the scenario json
      */
     public static JSONObject getScenario(String tool, String scenario) {
-        String jsonFilePath = "data" + File.separator + "scenarios" + File.separator
+        String jsonFilePath = ".." + File.separator + "data" + File.separator + "scenarios" + File.separator
                 + tool + File.separator + scenario + File.separator + scenario + ".json";
         JSONObject scenarioJson = null;
         try {
@@ -50,7 +50,7 @@ public class JSONLoader {
      * @return the json
      */
     public static JSONObject getUavParameters(String uavType) {
-        String jsonFilePath = "data" + File.separator + "uavs" + File.separator
+        String jsonFilePath = ".." + File.separator + "data" + File.separator + "uavs" + File.separator
                 + uavType + ".json";
         JSONObject uavParameters = null;
         try {
@@ -62,7 +62,7 @@ public class JSONLoader {
     }
 
     public static JSONObject getSensorParameters(String sensorType) {
-        String jsonFilePath = "data" + File.separator + "sensors" + File.separator
+        String jsonFilePath = ".." + File.separator + "data" + File.separator + "sensors" + File.separator
                 + sensorType + ".json";
         JSONObject sensorParameters = null;
         try {
@@ -74,7 +74,7 @@ public class JSONLoader {
     }
 
     public static JSONObject getRungeKuttaParam() {
-        String jsonFilePath = "data" + File.separator + "motionmodels"
+        String jsonFilePath = ".." + File.separator + "data" + File.separator + "motionmodels"
                 + File.separator + "rungekutta.json";
         JSONObject rungeKuttaParam = null;
         try {
@@ -86,7 +86,7 @@ public class JSONLoader {
     }
 
     public static JSONObject getCntrlParam(String factorsFile) {
-        String jsonFilePath = "data" + File.separator + "algorithms"
+        String jsonFilePath = ".." + File.separator + "data" + File.separator + "algorithms"
                 + File.separator + factorsFile + ".json";
         JSONObject paretosJS = null;
         try {
