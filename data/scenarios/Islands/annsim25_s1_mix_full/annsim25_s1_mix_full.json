@@ -1,5 +1,5 @@
 {
-    "benchmark": "Scenario 4, acyclic, 1sol",
+    "benchmark": "Scenario 4, cyclic, 1sol",
     "zone": {    
         "latitude": 36.8687866974819,
         "longitude": -2.7917287909395,
@@ -445,7 +445,7 @@
             "name": "uav_1", 
             "type": "MK-III",
             "control": {
-                "controlType": "acyclic",
+                "controlType": "cyclic",
                 "controlAt": 10.0
             },             
             "motionModel": 
@@ -514,7 +514,7 @@
             "name": "uav_2", 
             "type": "MK-III",
             "control": {
-                "controlType": "acyclic",
+                "controlType": "cyclic",
                 "controlAt": 10.0
             },             
             "motionModel": 
@@ -617,16 +617,13 @@
             }
         },
         {
-            "type": "spea2",
+            "type": "mode",
             "objectives": {
                 "constraints": ["nfz", "collision"],
                 "paretos": ["myo", "etd", "pd"],
                 "factors": "paretosJuan"
             },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
+            "recombine": {
                 "factor": 0.8,
                 "method": "singlePoint"
             },
@@ -690,16 +687,13 @@
             }
         },          
         {
-            "type": "spea2",
+            "type": "mode",
             "objectives": {
                 "constraints": ["nfz", "collision"],
                 "paretos": ["myo", "etd", "pd"],
                 "factors": "paretosJuan"
             },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
+            "recombine": {
                 "factor": 0.8,
                 "method": "singlePoint"
             },
@@ -715,7 +709,7 @@
             }
         },              
         {
-            "type": "nsga2",
+            "type": "spea2",
             "objectives": {
                 "constraints": ["nfz", "collision"],
                 "paretos": ["myo", "etd", "pd"],

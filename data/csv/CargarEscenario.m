@@ -2,7 +2,7 @@
 
 clearvars; close all;
 
-EXP = 'op_s4'; %'ScenarioEVPADS3Dinamic_baseCamMOV';    % Escenario a dibujar
+EXP = 'annsim25_s2'; %'ScenarioEVPADS3Dinamic_baseCamMOV';    % Escenario a dibujar
 especif = 'spec1';                % Especificación: 
                                 % "spec1" (se evalua despues del vuelo)
                                 % "spec2" (evalua mientras vuela)

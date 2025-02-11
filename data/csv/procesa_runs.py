@@ -52,8 +52,8 @@ def procesar_archivos_runs_en_directorio(directorio):
     return rendimiento_totales
 
 # Directorio inicial
-#directorio_inicial = os.getcwd() + '/spec1/Optimizer/resultadosCh4/op_s3_acy'  # Reemplazar para cada escenario
-directorio_inicial = os.getcwd() + '/spec1/Islands/isl_s4_mix_full'  # Reemplazar para cada escenario
+directorio_inicial = os.getcwd() + '/spec1/Optimizer/annsim25/annsim25_s3_cy'  # Reemplazar para cada escenario
+#directorio_inicial = os.getcwd() + '/spec1/Islands/annsim25/annsim25_s3_mix_full'  # Reemplazar para cada escenario
 print(f"Directorio: {directorio_inicial}")
 
 # Llamamos a la función para procesar todos los archivos en el directorio

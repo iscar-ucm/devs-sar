@@ -1,7 +1,7 @@
 # Folders #
 ######################
 build
-dist
+/dist/lib
 nbproject
 /data/csv/spec1/Islands
 /data/csv/spec1/Evaluator

@@ -27,7 +27,7 @@ colorPalette = [
 ];
 
 % Define las leyendas de los algoritmos
-legends = {'GEN-FULL','','GEN-RING','','MIX-FULL','','MIX-RING','',};
+legends = {'NSGA-II','','SPEA2','','NPSO','','MODE','',};
 
 % Define el número de secuencias
 %n_seq = [6,3,1];

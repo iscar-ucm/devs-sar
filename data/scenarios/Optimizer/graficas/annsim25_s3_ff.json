@@ -500,7 +500,7 @@
             }
         },         
         {
-            "type": "nsga2",
+            "type": "spea2",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo","etd", "pd"],
@@ -546,7 +546,30 @@
             }
         },         
         {
-            "type": "spea2",
+            "type": "nspso",
+            "objectives": {
+                "constraints": ["collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
+        }, 
+        {
+            "type": "nspso",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo", "etd", "pd"],

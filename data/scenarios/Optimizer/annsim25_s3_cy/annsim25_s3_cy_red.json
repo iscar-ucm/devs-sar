@@ -454,165 +454,44 @@
     },
     "algorithms": [	
         {
-            "type": "nsga2",
+            "type": "nspso",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo", "etd", "pd"],
                 "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
+            },               
+            "c1": 1.5,
+            "c2": 1.5,
+            "chi": 1.0,
+            "w": 0.7,
+            "topPartPercentage": 0.25,
             "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
+            "sequenceTime": 225.0,                   
+            "ns": 50,            
+            "nf": 2,            
             "migration": {
                 "type": "none"
             }
-        }, 
-        {
-            "type": "nsga2",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "none"
-            }
-        },         
-        {
-            "type": "nsga2",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo","etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 2,             
-            "migration": {
-                "type": "none"
-            }
-        },
-        {
-            "type": "spea2",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "none"
-            }
-        },         
-        {
-            "type": "spea2",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "none"
-            }
-        },         
-        {
-            "type": "mode",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo","etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 2,             
-            "migration": {
-                "type": "none"
-            }
-        },
+        },        
         {
             "type": "mode",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo", "etd", "pd"],
                 "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
+            },                  
+            "recombine": {
                 "factor": 0.8,
                 "method": "singlePoint"
             },
             "mutation": [0.1, 0.01],
             "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
+            "sequenceTime": 225.0,                   
+            "ns": 50,            
+            "nf": 2,             
             "migration": {
                 "type": "none"
             }
-        }                 
+        }        
     ]
 }

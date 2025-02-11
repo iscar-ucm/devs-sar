@@ -1,5 +1,5 @@
 {
-    "benchmark": "Scenario 5, acyclic, FF, smooth",
+    "description": "Scenario 2, cyclic, 1sol/FFsol",
     "zone": {    
         "latitude": 36.8687866974819,
         "longitude": -2.7917287909395,
@@ -1857,7 +1857,7 @@
         {
             "xRow": 30,
             "yCol": 55
-        },
+        },    
         {
             "xRow": 70,
             "yCol": 52
@@ -2168,7 +2168,7 @@
             "name": "uav_3", 
             "type": "MQ-9",
             "control": {
-                "controlType": "acyclic",
+                "controlType": "cyclic",
                 "controlAt": 20.0
             },             
             "motionModel": 
@@ -2235,7 +2235,7 @@
                             "name": "sensor2",
                             "type": "cameraMQ-9",
                             "control": {
-                                "controlType": "acyclic",
+                                "controlType": "cyclic",
                                 "controlAt": 6.0
                             },                         
                             "payload": 
@@ -2277,9 +2277,9 @@
         "numOfRuns": 20,
         "stopCriteria": {
             "iterations": 100,
-            "time": 3000.0,
+            "time": 10000.0,
             "pd": 1.0
-        },
+        },    
         "logIterations": true
     },
     "algorithms": [	
@@ -2287,7 +2287,7 @@
             "type": "nsga2",
             "objectives": {
                 "constraints": ["nfz"],
-                "paretos": ["myo", "etd", "pd", "smooth"],
+                "paretos": ["myo", "etd", "pd"],
                 "factors": "paretosJuan"
             },            
             "selection": {
@@ -2301,7 +2301,30 @@
             "sortingMethod": "CROWDING_DISTANCE",
             "sequenceTime": 250.0,            
             "ns": 50,
-            "nf": 2,             
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
+        },        
+        {
+            "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 250.0,            
+            "ns": 50,
+            "nf": 1,             
             "migration": {
                 "type": "none"
             }
@@ -2310,7 +2333,7 @@
             "type": "nsga2",
             "objectives": {
                 "constraints": ["nfz"],
-                "paretos": ["myo", "etd", "pd", "smooth"],
+                "paretos": ["myo", "etd", "pd"],
                 "factors": "paretosJuan"
             },            
             "selection": {
@@ -2322,18 +2345,18 @@
             },
             "mutation": [0.1, 0.01],
             "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 500.0,            
+            "sequenceTime": 250.0,            
             "ns": 50,
-            "nf": 2,             
+            "nf": 1,             
             "migration": {
                 "type": "none"
             }
-        },        
+        },         
         {
             "type": "spea2",
             "objectives": {
                 "constraints": ["nfz"],
-                "paretos": ["myo", "etd", "pd", "smooth"],
+                "paretos": ["myo","etd", "pd"],
                 "factors": "paretosJuan"
             },            
             "selection": {
@@ -2356,7 +2379,7 @@
             "type": "spea2",
             "objectives": {
                 "constraints": ["nfz"],
-                "paretos": ["myo", "etd", "pd", "smooth"],
+                "paretos": ["myo", "etd", "pd"],
                 "factors": "paretosJuan"
             },            
             "selection": {
@@ -2368,12 +2391,58 @@
             },
             "mutation": [0.1, 0.01],
             "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 500.0,            
+            "sequenceTime": 250.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
+        },                 
+        {
+            "type": "mode",
+            "objectives": {
+                "constraints": ["nfz"],
+                "paretos": ["myo","etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 250.0,            
             "ns": 50,
             "nf": 2,             
             "migration": {
                 "type": "none"
             }
-        }
+        },
+        {
+            "type": "mode",
+            "objectives": {
+                "constraints": ["nfz"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 250.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
+        }        
     ]
 }

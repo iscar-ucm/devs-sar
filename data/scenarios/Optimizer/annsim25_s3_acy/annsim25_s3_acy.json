@@ -1,5 +1,5 @@
 {
-    "description": "Scenario 3, cyclic, 1sol/FFsol",
+    "description": "Scenario 3, acyclic, 1sol/FFsol",
     "zone": {    
         "latitude": 36.8687866974819,
         "longitude": -2.7917287909395,
@@ -84,7 +84,7 @@
             "name": "uav_1", 
             "type": "i-SIVA",
             "control": {
-                "controlType": "cyclic",
+                "controlType": "acyclic",
                 "controlAt": 20.0
             },            
             "motionModel": 
@@ -133,7 +133,7 @@
                             "name": "sensor1",
                             "type": "cameraVerA",
                             "control": {
-                                "controlType": "cyclic",
+                                "controlType": "acyclic",
                                 "controlAt": 30.0
                             },
                             "payload": 
@@ -171,7 +171,7 @@
                             "name": "sensor2",
                             "type": "cameraVerB",
                             "control": {
-                                "controlType": "cyclic",
+                                "controlType": "acyclic",
                                 "controlAt": 6.0
                             },
                             "payload": 
@@ -211,7 +211,7 @@
             "name": "uav_2", 
             "type": "i-SIVA",
             "control": {
-                "controlType": "cyclic",
+                "controlType": "acyclic",
                 "controlAt": 20.0
             },            
             "motionModel": 
@@ -260,7 +260,7 @@
                             "name": "sensor1",
                             "type": "cameraVerA",
                             "control": {
-                                "controlType": "cyclic",
+                                "controlType": "acyclic",
                                 "controlAt": 30.0
                             },
                             "payload": 
@@ -298,7 +298,7 @@
                             "name": "sensor2",
                             "type": "cameraVerB",
                             "control": {
-                                "controlType": "cyclic",
+                                "controlType": "acyclic",
                                 "controlAt": 6.0
                             },
                             "payload": 
@@ -338,7 +338,7 @@
             "name": "uav_3", 
             "type": "MQ-9",
             "control": {
-                "controlType": "cyclic",
+                "controlType": "acyclic",
                 "controlAt": 20.0
             },             
             "motionModel": 
@@ -405,7 +405,7 @@
                             "name": "sensor2",
                             "type": "cameraMQ-9",
                             "control": {
-                                "controlType": "cyclic",
+                                "controlType": "acyclic",
                                 "controlAt": 6.0
                             },                         
                             "payload": 
@@ -494,34 +494,11 @@
             "sortingMethod": "CROWDING_DISTANCE",
             "sequenceTime": 225.0,            
             "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "none"
-            }
-        },         
-        {
-            "type": "nsga2",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo","etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
             "nf": 2,             
             "migration": {
                 "type": "none"
             }
-        },
+        },               
         {
             "type": "spea2",
             "objectives": {
@@ -544,7 +521,7 @@
             "migration": {
                 "type": "none"
             }
-        },         
+        },
         {
             "type": "spea2",
             "objectives": {
@@ -563,56 +540,10 @@
             "sortingMethod": "CROWDING_DISTANCE",
             "sequenceTime": 225.0,            
             "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "none"
-            }
-        },         
-        {
-            "type": "mode",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo","etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
             "nf": 2,             
             "migration": {
                 "type": "none"
             }
-        },
-        {
-            "type": "mode",
-            "objectives": {
-                "constraints": ["collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "none"
-            }
-        }                 
+        }      
     ]
 }

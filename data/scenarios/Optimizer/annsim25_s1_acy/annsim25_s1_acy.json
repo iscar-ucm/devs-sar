@@ -1,5 +1,5 @@
 {
-    "benchmark": "Scenario 4, acyclic, 1sol",
+    "description": "Scenario 1, acyclic, 1sol/FFsol",
     "zone": {    
         "latitude": 36.8687866974819,
         "longitude": -2.7917287909395,
@@ -586,8 +586,7 @@
             "iterations": 100,
             "time": 30000.0,
             "pd": 1.0
-        },
-        "topology": "fullConnected",        
+        },     
         "logIterations": true
     },
     "algorithms": [	
@@ -609,11 +608,55 @@
             "sortingMethod": "CROWDING_DISTANCE",
             "sequenceTime": 225.0,            
             "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
+            }
+        }, 
+        {
+            "type": "nsga2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
             "nf": 2,             
             "migration": {
-                "type": "diversity",
-                "nx": 5,
-                "ni": 25
+                "type": "none"
+            }
+        },               
+        {
+            "type": "spea2",
+            "objectives": {
+                "constraints": ["nfz", "collision"],
+                "paretos": ["myo", "etd", "pd"],
+                "factors": "paretosJuan"
+            },            
+            "selection": {
+                "method": "binaryTournament"
+            },
+            "crossover": {
+                "factor": 0.8,
+                "method": "singlePoint"
+            },
+            "mutation": [0.1, 0.01],
+            "sortingMethod": "CROWDING_DISTANCE",
+            "sequenceTime": 225.0,            
+            "ns": 50,
+            "nf": 1,             
+            "migration": {
+                "type": "none"
             }
         },
         {
@@ -634,108 +677,9 @@
             "sortingMethod": "CROWDING_DISTANCE",
             "sequenceTime": 225.0,            
             "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "firstFront",
-                "ni": 25
-            }
-        },        
-        {
-            "type": "spea2",
-            "objectives": {
-                "constraints": ["nfz", "collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
             "nf": 2,             
             "migration": {
-                "type": "diversity",
-                "nx": 5,
-                "ni": 25
-            }
-        },
-        {
-            "type": "nsga2",
-            "objectives": {
-                "constraints": ["nfz", "collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "firstFront",
-                "ni": 25
-            }
-        },          
-        {
-            "type": "spea2",
-            "objectives": {
-                "constraints": ["nfz", "collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 2,             
-            "migration": {
-                "type": "diversity",
-                "nx": 5,
-                "ni": 25
-            }
-        },              
-        {
-            "type": "nsga2",
-            "objectives": {
-                "constraints": ["nfz", "collision"],
-                "paretos": ["myo", "etd", "pd"],
-                "factors": "paretosJuan"
-            },            
-            "selection": {
-                "method": "binaryTournament"
-            },
-            "crossover": {
-                "factor": 0.8,
-                "method": "singlePoint"
-            },
-            "mutation": [0.1, 0.01],
-            "sortingMethod": "CROWDING_DISTANCE",
-            "sequenceTime": 225.0,            
-            "ns": 50,
-            "nf": 1,             
-            "migration": {
-                "type": "firstFront",
-                "ni": 25
+                "type": "none"
             }
         }
     ]

@@ -1,5 +1,5 @@
 % Variables de control
-mostrarLeyendas = true; % Control de aparición de las leyendas
+mostrarLeyendas = false; % Control de aparición de las leyendas
 mostrarNumerosSecuencia = true; % Control de aparición de los números de secuencia
 
 % Leyendas
@@ -11,7 +11,7 @@ y_pos = 1.05;  % Posición inicial
 delta_y = 0.08; % Espacio entre las leyendas
 
 
-col = ['m', 'y', 'y', 'g', 'r']; % Colores de los UAV
+col = ['k', 'm', 'y', 'g', 'r']; % Colores de los UAV
 maxBel = 0.001;
 drawControlPoints = false; % Variable para controlar si se pintan los instantes de control
 
@@ -22,11 +22,11 @@ drawControlPoints = false; % Variable para controlar si se pintan los instantes 
 %t_belief = [sol(1, 3), 1800, 3600, 5400, sol(end, 3)]; % op_s1 1800
 %t_belief = [sol(1, 3), 500, 1000, 1500, 2000, 2500, 3000, 3500, sol(end, 3)]; % op_s2_s3 500
 %t_belief = [sol(1, 3), 1000, 2000, 3000, sol(end, 3)]; % op_s2_s3 1000
-t_belief = [sol(1, 3), 225, 450, 675, sol(end, 3)]; % op_s4 225
+%t_belief = [sol(1, 3), 225, 450, 675, sol(end, 3)]; % op_s4 225
 %t_belief = [sol(1, 3), 450, sol(end, 3)]; % op_s4 450
 %t_belief = [sol(1, 3), 250, 500, 750, 1000, 1250, sol(end, 3)];%op_s5_250
 %t_belief = [sol(1, 3), 500, 1000, sol(end, 3)]; %op_s5_500
-%t_belief = [sol(1, 3), 225, 450, 675, 900, 1125, 1350, 1575, sol(end, 3)]; %op_s6_225
+t_belief = [sol(1, 3), 225, 450, 675, 900, 1125, 1350, 1575, sol(end, 3)]; %op_s6_225
 %t_belief = [sol(1, 3), 450, 900, 1350, sol(end, 3)]; %op_s6_450
 
 % Configuración de zonas de exclusión
@@ -66,10 +66,10 @@ for k = 1:length(t_belief)
         
         % Configurar ejes y establecer ticks
         fg = gca;
-        %xlim([0, xWidth]); % Establecer límites en el eje X
-        %ylim([0, yHeight]); % Establecer límites en el eje Y        
-        xticks(linspace(0, xWidth, 4));
-        yticks(linspace(0, yHeight, 3));
+        xlim([0, xWidth]); % Establecer límites en el eje X
+        ylim([0, yHeight]); % Establecer límites en el eje Y        
+        xticks(linspace(0, xWidth, 6));
+        yticks(linspace(0, yHeight, 6));
         set(fg, 'GridColor', 'k');
         set(fg, 'GridAlpha', 0.25);
         set(fg, 'Layer', 'top');

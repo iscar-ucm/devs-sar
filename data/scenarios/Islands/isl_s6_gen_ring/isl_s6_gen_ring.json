@@ -504,7 +504,7 @@
             }
         },        
         {
-            "type": "nsga2",
+            "type": "spea2",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo", "etd", "pd"],
@@ -529,7 +529,7 @@
             }
         },        
         {
-            "type": "spea2",
+            "type": "nsga2",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo", "etd", "pd"],
@@ -553,7 +553,7 @@
             }
         },
         {
-            "type": "nsga2",
+            "type": "spea2",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo", "etd", "pd"],
@@ -578,7 +578,7 @@
             }
         },        
         {
-            "type": "spea2",
+            "type": "nsga2",
             "objectives": {
                 "constraints": ["collision"],
                 "paretos": ["myo", "etd", "pd"],
