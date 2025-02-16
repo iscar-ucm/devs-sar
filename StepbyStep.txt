@@ -1,0 +1,118 @@
+BRIEF INTRODUCTION TO THE FOLDER STRUCTURE:
+	devs-sar
+	|
+	|- data
+		|
+		|- algorithms (json files to configure pareto objectives resolution)
+		|
+		|- csv (diverse matlab and python scripts to process results)
+			|
+			|- spec1 (results are organized per DEVS specification and TOOL)
+				|
+				|- FlightSimulator (FS results in csv format)
+				|
+				|- Evaluator (EV results in csv format)
+				|
+				|- Optimizer (OP results in csv format)
+				|
+				|- Islands (IM results in csv format)
+			|
+			|- spec2 (analogue to spec1 but only applicable to FS and EV tools)
+		|
+		|- motionmodels (json files to configure UAV and Sensors Motion Model, actually limited to Runge-Kutta)
+		|
+		|- scenarios (current scenarios definitions divided per TOOL)
+			|
+			|- FlightSimulator (FS scenarios in json file format)
+			|
+			|- Evaluator (EV scenarios in json file format)
+			|
+			|- Optimizer (OP scenarios in json file format)
+			|
+			|- Islands (IM scenarios in json file format)
+		|
+		|- sensors (ideal, footprint, radar and camera characterization)
+		|
+		|- uavs (fixed-wing UAVs characterization)
+	|
+	|- dist (executable .jar)
+	|
+	|- lib (external libraries dependencies)
+	|
+	|- src (source code)
+		|
+		|- Main (main Java class)
+		|
+		|- models (target-search elements plus problem optimization)
+			|
+			|- environment (search area classes)
+			|
+			|- optimizer (MOEA algorithms, decision, objetives, operations, etc)
+			|
+			|- planner (scenario class)
+			|
+			|- sensor (payloads + motion model)
+			|
+			|- target (belief structure + motion models)
+			|
+			|- uavs (motion model)
+		|				
+		|- utils (csv handler, jsonloader, general purpose classes)
+		|
+		|- xdevs (DEVS specifications per each TOOL and overloading SPEC 2 classes)
+
+BRIEF INTRODUCTION TO THE SCENARIO JSON FILE:
+
+1. Zone. Defines the search area, including the latitude and longitude of the southwest (SW) corner.
+2. NFZs. Defined as a list of search area cells where UAVs are restricted from flying.
+3. Wind Matrix. The wind matrix should cover the entire search area, though the number of cells may differ. At any given time t, each UAV is positioned within the wind matrix, and the corresponding wind vector is applied as an environmental factor in the motion model.
+4. Target. Includes the target's name, motion model, and initial state.
+    - Targets can be static or dynamic. If dynamic, three motion models are available: homogeneous, potential, or interpolation.
+    - The initial belief can be set using Gaussian distributions or by loading a CSV file.
+    - The target’s initial time should match the earliest start time among all UAVs, while the final time should match the latest UAV end time.
+    - IMPORTANT: If the nonEscape flag is set to true, target movements may cause probability loss at the boundary cells. Otherwise, probability remains fully distributed.
+5. UAV. Includes the UAV’s name, type, control method, motion model, and onboard sensors.
+    - The UAV name determines the folder where its control actions are stored, and the same applies to sensors.
+    -UAV control can be cyclic or acyclic:
+        - Cyclic control: controlAt defines the period for generating each control signal.
+        - Acyclic control: controlAt defines the minimum separation between control signals.
+    - UAVs do not need to start or finish at the same time, but their motionModelAt must be a multiple of both the motionModelAt and captureAt values of their onboard sensors. Otherwise, measurements may not align with the UAV’s actual position.
+5. Sensors. The same considerations that apply to UAVs also apply to sensors. Additionally:
+    - Ideal, footprint, and radar sensors are static, while the camera sensor follows a motion model.
+    - The sensor's start and end times must fall within the time limits of the UAV carrying it.
+
+BRIEF INTRODUCTION TO THE OPTIMIZATION PARAMETERS IN THE SCENARIO JSON FILE:    
+
+1. Control Parameters:
+    - Number of Runs. Specifies the number of runs for each algorithm included in the algorithm structure.
+    - Stop Criteria. Defines the stopping conditions for each sequence in every run of each algorithm. For example, if the stop criterion is set to 100 iterations, it applies to each sequence in every run of each algorithm.
+    - IMPORTANT: If the logIterations flag is set to true, an iterations.csv file is saved in the corresponding results folder. This file records the constraint values and Pareto fronts of all solutions in the first Pareto front for each iteration, along with the corresponding timestamps.
+
+2. Algorithms: You can include as many algorithms as needed. They will be optimized sequentially in the Optimizer tool and in parallel in the Island tool. The sequenceTime parameter defines the decision horizon of the scenario. For example, if the total flight time is 900 seconds and the sequence time is 225 seconds, there will be 4 sequences per run.
+
+HOW TO RUN AN OPTIMIZATION:
+
+1. Download latest repository version from https://github.com/iscar-ucm/devs-sar.git
+2. Ensure that the optimization scenario is defined in a JSON file with the same name as the folder containing it. For example: "data/scenarios/Optimizer/op_s4_acy/op_s4_acy.json".
+3. Open a command window in the folder where devs-sar.jar is located.
+4. Run the following command: java -cp devs-sar.jar Main.AppMain Optimizer scenarioname
+5. Wait for the optimization process to complete.
+6. Results will be saved in the folder: data/csv/spec1/optimizer/scenarioname.
+    - Each algorithm included in the optimization will have its own results folder.
+    - Inside each algorithm’s folder, results for individual runs will be stored. These contain all solutions included in the first Pareto front at the end of the optimization. Additionally, for each algorithm, a runs.csv file is generated, summarizing the solutions obtained for each execution.
+    - Each solution includes the resulting control signals for every UAV and its onboard sensors, organized by folders corresponding the UAV and sensor names.
+    - If the logIterations flag was enabled, an iterations.csv file is also saved for each run, recording iteration-specific data.
+7. How you analyze the results depends on the user. However, the data/csv folder contains various MATLAB and Python functions that can be used for this purpose.
+
+HOW TO RUN AN EVALUATION:
+
+1. Download latest repository version from https://github.com/iscar-ucm/devs-sar.git
+2. Ensure that the evaluation scenario is defined in a JSON file with the same name as the folder containing it. For example: "data/scenarios/Evaluator/op_s5/op_s5.json".
+3. Ensure that each UAV defined in the scenario has its corresponding control signals stored in the scenario folder. For example, for "uav_3", there should be a file: data/scenarios/Evaluator/op_s5/uavs/uav_3/uav_3.csv containing the defined control signals. The same applies to sensors, (data/scenarios/Evaluator/op_s5/uavs/uav_3/sensor_2/sensor_2.csv).
+4. Open a command window in the folder where devs-sar.jar is located.
+5. Run the following command: java -cp devs-sar.jar Main.AppMain Evaluator spec1 scenarioname
+6. Note spec1 or spec2 can be choosen depending on which DEVS specification do you want to use to perform the evaluation.
+7. Results will be saved in the folder: data/csv/specSelected/evaluator/scenarioName.
+    - targets/ folder: For each target, a file targetNamePath.csv is saved, where each row corresponds to the detection probability and the expected detection time at every time step when an observation or object movement occurred. Additionally, a file containing the belief state at each time step is stored.
+    - Important: If the evaluator was executed with the -ntp (no target path) flag, only the initial and final beliefs of the target will be saved, omitting all intermediate beliefs.
+    - uavs/ folder: For each UAV, the following files are saved: uavNamePath.csv containing the UAV state at each time step, uavNameData.csv containing the total results of the UAV's constraints, and uavNameControl.csv containing the UAV control signals.
