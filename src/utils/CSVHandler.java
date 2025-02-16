@@ -44,7 +44,7 @@ import org.ejml.dense.row.CommonOps_DDRM;
 public class CSVHandler {
 
     private static final Logger LOGGER = Logger.getLogger(CSVHandler.class.getName());
-    private static final String CSVPATH = ".." + File.separator + "data" + File.separator + "csv" + File.separator;
+    private static final String CSVPATH = "data" + File.separator + "csv" + File.separator;
     private static String loadTarget;
     private final String loadPath;
     private final String writePath;
@@ -58,7 +58,7 @@ public class CSVHandler {
 
     public CSVHandler(String devsSpec, String tool, String scenarioName) {
         // set path to load files
-        loadPath = ".." + File.separator + "data" + File.separator + "scenarios" + File.separator + tool
+        loadPath = "data" + File.separator + "scenarios" + File.separator + tool
                 + File.separator + scenarioName + File.separator;
         loadTarget = loadPath;
         // create the folder to write results     
