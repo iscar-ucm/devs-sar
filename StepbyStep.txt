@@ -95,21 +95,22 @@ HOW TO RUN AN OPTIMIZATION:
 1. Download latest repository version from https://github.com/iscar-ucm/devs-sar.git
 2. Ensure that the optimization scenario is defined in a JSON file with the same name as the folder containing it. For example: "data/scenarios/Optimizer/op_s4_acy/op_s4_acy.json".
 3. Open a command window in the folder where devs-sar.jar is located.
-4. Run the following command: java -cp devs-sar.jar Main.AppMain Optimizer scenarioname
-5. Wait for the optimization process to complete.
-6. Results will be saved in the folder: data/csv/spec1/optimizer/scenarioname.
+4. Copy dist/devs-sar.jar file to the repository root folder.
+5. Run the following command: java -cp devs-sar.jar Main.AppMain Optimizer scenarioname
+6. Wait for the optimization process to complete.
+7. Results will be saved in the folder: data/csv/spec1/optimizer/scenarioname.
     - Each algorithm included in the optimization will have its own results folder.
     - Inside each algorithm’s folder, results for individual runs will be stored. These contain all solutions included in the first Pareto front at the end of the optimization. Additionally, for each algorithm, a runs.csv file is generated, summarizing the solutions obtained for each execution.
     - Each solution includes the resulting control signals for every UAV and its onboard sensors, organized by folders corresponding the UAV and sensor names.
     - If the logIterations flag was enabled, an iterations.csv file is also saved for each run, recording iteration-specific data.
-7. How you analyze the results depends on the user. However, the data/csv folder contains various MATLAB and Python functions that can be used for this purpose.
+8. How you analyze the results depends on the user. However, the data/csv folder contains various MATLAB and Python functions that can be used for this purpose.
 
 HOW TO RUN AN EVALUATION:
 
 1. Download latest repository version from https://github.com/iscar-ucm/devs-sar.git
 2. Ensure that the evaluation scenario is defined in a JSON file with the same name as the folder containing it. For example: "data/scenarios/Evaluator/op_s5/op_s5.json".
 3. Ensure that each UAV defined in the scenario has its corresponding control signals stored in the scenario folder. For example, for "uav_3", there should be a file: data/scenarios/Evaluator/op_s5/uavs/uav_3/uav_3.csv containing the defined control signals. The same applies to sensors, (data/scenarios/Evaluator/op_s5/uavs/uav_3/sensor_2/sensor_2.csv).
-4. Open a command window in the folder where devs-sar.jar is located.
+4. Copy dist/devs-sar.jar file to the repository root folder.
 5. Run the following command: java -cp devs-sar.jar Main.AppMain Evaluator spec1 scenarioname
 6. Note spec1 or spec2 can be choosen depending on which DEVS specification do you want to use to perform the evaluation.
 7. Results will be saved in the folder: data/csv/specSelected/evaluator/scenarioName.
