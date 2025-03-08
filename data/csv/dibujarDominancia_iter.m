@@ -1,5 +1,9 @@
-% Factores pareto utilizados
-factors = [1.0, 1000.0, 10.0, 1000.0, 1.0, 1.0];  % Tiempo, MYO, ETD, PD, NFZs, COL
+% Factores Pareto en un struct
+factors = struct('myo', 1000.0, ...
+                 'etd', 10.0, ...
+                 'pd', 1000.0, ...
+                 'fuel', 0.001, ...
+                 'smooth', 0.001)
 
 % Número de algoritmos y ejecuciones
 N_alg = numel(OP);
@@ -11,6 +15,10 @@ mediasPareto = cell(N_alg, 1);
 % Calcular la media de los Pareto para cada algoritmo
 for k = 1:N_alg
     
+    % Datos de paretos para el algoritmo actual
+    N_paretos = numel(OP(k).data.objectives.paretos);
+    pareto_names = OP(k).data.objectives.paretos;
+
     % Inicializar acumuladores para las medias
     acumulador = [];
 
@@ -24,11 +32,14 @@ for k = 1:N_alg
         % primer frente Pareto
         solDataFiltered = solData(solData(:, 3) == "1", :);
 
+        % Calcular el número de secuencias totales posibles
+        totalSecuencias = size(solDataFiltered, 1) / OP(k).ctrlParams.stopCriteria.iterations;
+
         % Acumular para cada secuencia e iteración los valores Pareto
         for i = 1:size(solDataFiltered, 1)
 
-            % Extraer las columnas de interés (de la 4 a la última)
-            fila = solDataFiltered(i, 4:end);
+            % Extraer las columnas de interés (de la 4 hasta el último pareto)
+            fila = solDataFiltered(i, 4:4+N_paretos);
 
             % Convertir las columnas a números
             filaNumerica = str2double(fila);
@@ -38,8 +49,23 @@ for k = 1:N_alg
                 acumulador(i, :) = zeros(1, size(filaNumerica, 2)); % Inicializar nueva fila con ceros
             end
 
-            % Actualizar acumulador
-            acumulador(i, :) = acumulador(i, :) + filaNumerica;
+            % Actualizar el acumulador para el tiempo
+            acumulador(i, 1) = acumulador(i, 1) + filaNumerica(1);
+
+            % itera para cada uno de los paretos
+            for p = 1:N_paretos
+                if strcmp(pareto_names{p},'etd')
+                    % -------- Corregir ETD
+                    % Calcular el tiempo restante basado en la secuencia actual
+                    secuenciaActual = ceil(i / OP(k).ctrlParams.stopCriteria.iterations);
+                    t_restante = OP(k).data.sequenceTime * (totalSecuencias - secuenciaActual);
+                    % Aplicar la corrección
+                    acumulador(i, p+1) = acumulador(i, p+1) + (filaNumerica(p+1) + t_restante);
+                else
+                    % Lo de antes (si no es etd)
+                    acumulador(i, p+1) = acumulador(i, p+1) + filaNumerica(p+1);
+                end
+            end
         end
     end
 
@@ -49,9 +75,23 @@ for k = 1:N_alg
     % Calcular la media acumulada para cada fila y asignarla a las columnas 4:end
     for i = 1:size(acumulador, 1)
         for j = 1:size(acumulador, 2)
-            % Aplicar la corrección con el factor correspondiente
-            factor = factors(j); % Seleccionar el factor según la columna
-            solucionesMedia{i, j} = round((acumulador(i, j) / Nruns) * factor) / factor;
+            if j == 1
+                % La primera columna es el tiempo, no aplicar factor
+                solucionesMedia{i, j} = round((acumulador(i, j) / Nruns) * 1.0) / 1.0;
+            else
+                % Obtener el nombre del pareto correspondiente (desplazado por 1)
+                pareto_name = pareto_names{j-1}; % j-1 porque acumulador incluye tiempo
+
+                % Buscar el factor correspondiente al pareto actual
+                if isfield(factors, pareto_name)
+                    factor = factors.(pareto_name);
+                else
+                    factor = 1.0; % Si no está en la lista, aplicar factor 1 (sin cambio)
+                end
+
+                % Aplicar la corrección con el factor correspondiente
+                solucionesMedia{i, j} = round((acumulador(i, j) / Nruns) * factor) / factor;
+            end
         end
     end
 
@@ -168,7 +208,7 @@ for iter = 1:minRows
     end
 end
 
-algoritmoEtiquetas = {'S3-FULL', 'NSGA-II-A', 'NSGA-II-B', 'SPEA2-A', 'SPEA2-B', 'MODE-A', 'MODE-B'};
+algoritmoEtiquetas = {'NSGA-II-225', 'NSGA-II-450', 'NSGA-II-900'};
 
 % Gráfica con los resultados
 figure;
